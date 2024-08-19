@@ -36,6 +36,7 @@ const userForm = ref({
             </div>
             <form class="sm:col-span-6">
                 <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+<!--                    TODO: вынести в компонент табов-->
                     <ul class="flex col-span-6 flex-wrap text-sm font-medium text-center text-gray-500 dark:text-gray-400">
                         <li class="me-2" v-for="(tab, key) of tabs">
                             <a

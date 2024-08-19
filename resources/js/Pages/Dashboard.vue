@@ -13,6 +13,14 @@ const modals = ref({
     comparableHolds: false,
 })
 
+const serviceTypes = [
+    {text: 'Экспресс', value: 0},
+    {text: 'Сборный груз Т-Т', value: 1},
+    {text: 'Сборный груз Д-Д', value: 2},
+    {text: 'Сборный груз Т-Д', value: 3},
+    {text: 'Паллетная доставка', value: 4},
+]
+
 const selectedComparisonParams = ref([])
 
 const comparisonParams = [
@@ -164,13 +172,7 @@ const comparableHoldsAvailable = ref([
                                     <div class="mt-1">
                                         <custom-select
                                             id="service-type"
-                                            :values="[
-                                            {text: 'Экспресс', value: 0},
-                                            {text: 'Сборный груз Т-Т', value: 1},
-                                            {text: 'Сборный груз Д-Д', value: 2},
-                                            {text: 'Сборный груз Т-Д', value: 3},
-                                            {text: 'Паллетная доставка', value: 4},
-                                            ]"/>
+                                            :values="serviceTypes"/>
                                     </div>
                                 </div>
                                 <div class="sm:col-span-3">

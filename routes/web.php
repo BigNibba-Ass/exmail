@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\InformationsController;
+use App\Http\Controllers\Admin\MainScreenController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -19,6 +21,8 @@ Route::get('/offer-test', function () {
 Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
     Route::resources([
         'users' => UserController::class,
+        'main_screen' => MainScreenController::class,
+        'informations' => InformationsController::class,
     ]);
 });
 

@@ -8,7 +8,7 @@ import {Head} from '@inertiajs/vue3';
     <Head title="Коммерческое предложение №Тест"/>
 
     <AuthenticatedLayout>
-        <div class="py-12">
+        <div class="py-4">
             <div class="max-w-full mx-auto sm:px-6 lg:px-8">
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg w-full">
                     <div class="w-full flex">

@@ -87,9 +87,6 @@ const comparableHoldsAvailable = ref([
     <Head title="Главная"/>
 
     <AuthenticatedLayout>
-        <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">Главная</h2>
-        </template>
         <Modal :show="modals.comparisonParams" @close="modals.comparisonParams = false">
             <div class="p-6">
                 <h2 class="text-lg text-center font-medium text-gray-900">

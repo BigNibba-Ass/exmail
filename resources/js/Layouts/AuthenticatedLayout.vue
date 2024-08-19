@@ -12,7 +12,7 @@ const showingNavigationDropdown = ref(false);
 
 <template>
     <div>
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div class="min-h-screen bg-gray-200 dark:bg-gray-900">
             <nav class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
                 <!-- Primary Navigation Menu -->
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -66,7 +66,7 @@ const showingNavigationDropdown = ref(false);
                                     </template>
 
                                     <template #content>
-                                        <DropdownLink :href="route('profile.edit')"> Профиль </DropdownLink>
+<!--                                        <DropdownLink :href="route('profile.edit')"> Профиль </DropdownLink>-->
                                         <DropdownLink :href="route('logout')" method="post" as="button">
                                             Выйти
                                         </DropdownLink>
@@ -129,7 +129,7 @@ const showingNavigationDropdown = ref(false);
                         </div>
 
                         <div class="mt-3 space-y-1">
-                            <ResponsiveNavLink :href="route('profile.edit')"> Профиль </ResponsiveNavLink>
+<!--                            <ResponsiveNavLink :href="route('profile.edit')"> Профиль </ResponsiveNavLink>-->
                             <ResponsiveNavLink :href="route('logout')" method="post" as="button">
                                Выйти
                             </ResponsiveNavLink>

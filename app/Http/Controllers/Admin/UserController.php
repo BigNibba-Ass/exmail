@@ -40,6 +40,7 @@ class UserController extends Controller
 
     public function handleBlockAttempt(User $user)
     {
+        if($user->is_admin) return redirect()->back();
         $user->update(['is_blocked' => !$user->is_blocked]);
         return redirect()->back();
     }

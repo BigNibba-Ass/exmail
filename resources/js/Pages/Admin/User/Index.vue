@@ -38,7 +38,9 @@ const userForm = ref({
 })
 
 const handleBlockAttempt = (userId) => {
-    router.post(route('admin.users.handle-block-attempt', userId))
+    if (confirm('Вы уверены?')) {
+        router.post(route('admin.users.handle-block-attempt', userId))
+    }
 }
 
 const sendUserForm = () => {
@@ -61,7 +63,7 @@ const sendUserForm = () => {
 
 <template>
     <AdminLayout name="Профили">
-        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+        <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 w-full">
             <div class="sm:col-span-6">
                 <h2 class="text-2xl font-bold">
                     Профили

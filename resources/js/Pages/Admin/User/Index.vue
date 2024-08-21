@@ -1,11 +1,12 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import {computed, ref} from "vue";
+import {computed, ref, watch} from "vue";
 import {UserIcon, EyeIcon, EyeSlashIcon} from "@heroicons/vue/20/solid/index.js";
 import {router, usePage} from "@inertiajs/vue3";
 import {Link} from "@inertiajs/vue3";
-import {NoSymbolIcon, ArrowUturnLeftIcon} from "@heroicons/vue/20/solid/index.js";
+import {NoSymbolIcon, CheckIcon} from "@heroicons/vue/20/solid/index.js";
+import {generateRandomString} from "@/Traits.js";
 
 const page = usePage()
 
@@ -26,7 +27,7 @@ const tabs = [
 ]
 
 const generatePassword = () => {
-    userForm.value.password = userForm.value.password_confirmation = Math.random().toString(36).slice(-8);
+    userForm.value.password = userForm.value.password_confirmation = generateRandomString();
     showPassword.value = true
 }
 
@@ -36,12 +37,6 @@ const userForm = ref({
     password: '',
     password_confirmation: '',
 })
-
-const handleBlockAttempt = (userId) => {
-    if (confirm('Вы уверены?')) {
-        router.post(route('admin.users.handle-block-attempt', userId))
-    }
-}
 
 const sendUserForm = () => {
     console.log(userForm.value)
@@ -59,6 +54,16 @@ const sendUserForm = () => {
         }
     })
 }
+
+const userSearchQuery = ref(null)
+
+watch(userSearchQuery, (val) => {
+    console.log(val)
+    router.get(route('admin.users.index', {name: val}), {}, {
+        preserveScroll: true,
+        preserveState: true,
+    })
+})
 </script>
 
 <template>
@@ -161,6 +166,9 @@ const sendUserForm = () => {
                     </form>
                     <div class="sm:col-span-6 p-5 rounded grid grid-cols-1 gap-y-6 gap-x-4 rounded"
                          v-if="currentTab === 1">
+                        <div>
+                            <input v-model="userSearchQuery" class="w-full rounded border-gray-200 shadow" placeholder="Поиск по имени"/>
+                        </div>
                         <table class="w-full rounded divide-y divide-gray-200 shadow rounded">
                             <thead class="bg-gray-50">
                             <tr>
@@ -174,7 +182,7 @@ const sendUserForm = () => {
                                     Администратор
                                 </th>
                                 <th class="relative px-6 py-3">
-                                    Блокировка
+                                    Доступ
                                 </th>
                                 <th class="relative px-6 py-3">
                                     Изменить
@@ -193,10 +201,10 @@ const sendUserForm = () => {
                                     {{ user.is_admin ? 'Да' : 'Нет' }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                    <button class="mt-5" @click.prevent="handleBlockAttempt(user.id)">
-                                        <arrow-uturn-left-icon v-if="user.is_blocked" class="w-5 h-5 text-green-600"/>
+                                    <div class="mt-5 w-full flex justify-center">
+                                        <check-icon v-if="!user.is_blocked" class="w-5 h-5 text-green-600"/>
                                         <no-symbol-icon v-else class="w-5 h-5 text-red-600"/>
-                                    </button>
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                     <Link

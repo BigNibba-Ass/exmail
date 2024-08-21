@@ -72,11 +72,8 @@ const comparableHoldsAvailable = ref([
 ])
 
 const serviceTypes = [
-    {text: 'Экспресс', value: 0},
+    {text: 'Экспресс-доставка от двери до двери', value: 0},
     {text: 'Сборный груз Т-Т', value: 1},
-    {text: 'Сборный груз Д-Д', value: 2},
-    {text: 'Сборный груз Т-Д', value: 3},
-    {text: 'Паллетная доставка', value: 4},
 ]
 
 </script>
@@ -92,36 +89,6 @@ const serviceTypes = [
                 </h2>
             </div>
             <form class="sm:col-span-6">
-                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                    <div class="sm:col-span-6 rounded grid grid-cols-1 gap-y-6 gap-x-4">
-                        <h2 class="text-lg font-medium text-gray-900">
-                            Параметры для сравнения
-                        </h2>
-                    </div>
-                    <div class="sm:col-span-6 rounded grid grid-cols-1 gap-y-6 gap-x-4">
-                        <fieldset>
-                            <div class="mt-4 space-y-4">
-                                <div class="relative flex items-start" v-for="(param, key) of comparisonParams">
-                                    <div class="flex items-center h-5">
-<!--                                        v-model="selectedComparisonParams"-->
-                                        <input :id="param.name + '_checkbox-param'" type="checkbox"
-                                               :value="key"
-                                               class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"/>
-                                    </div>
-                                    <div class="ml-3 text-sm">
-                                        <label :for="param.name + '_checkbox-param'" class="font-medium flex text-gray-700">{{
-                                                param.label
-                                            }}
-                                            <pencil-icon class="w-5 ms-5 text-indigo-600 cursor-pointer"/>
-
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </fieldset>
-
-                    </div>
-                </div>
                 <div class="grid grid-cols-1 mt-5 gap-y-6 gap-x-4 sm:grid-cols-6">
                     <div class="sm:col-span-6 rounded grid grid-cols-1 gap-y-6 gap-x-4">
                         <h2 class="text-lg font-medium text-gray-900">

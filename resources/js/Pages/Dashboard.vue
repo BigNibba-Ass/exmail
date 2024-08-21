@@ -17,13 +17,9 @@ const modals = ref({
 })
 
 const serviceTypes = [
-    {text: 'Экспресс', value: 0},
+    {text: 'Экспресс-доставка от двери до двери', value: 0},
     {text: 'Сборный груз Т-Т', value: 1},
-    {text: 'Сборный груз Д-Д', value: 2},
-    {text: 'Сборный груз Т-Д', value: 3},
-    {text: 'Паллетная доставка', value: 4},
 ]
-
 const selectedComparisonParams = ref([])
 
 const comparisonParams = [

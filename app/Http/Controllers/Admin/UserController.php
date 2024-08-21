@@ -3,16 +3,20 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\SearchRequest;
 use App\Http\Requests\Admin\Users\UserRequest;
+use App\Http\Requests\Admin\Users\UserUpdateRequest;
 use App\Models\User;
-use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(SearchRequest $request)
     {
+
         return inertia('Admin/User/Index', [
-            'users' => User::all()
+            'users' => User::when($request->name, function ($query) use ($request) {
+                $query->where('name', 'like', '%' . $request->name . '%');
+            })->get()
         ]);
     }
 
@@ -30,18 +34,27 @@ class UserController extends Controller
     {
     }
 
-    public function edit($id)
+    public function edit(User $user)
     {
+        return inertia('Admin/User/Edit', ['user' => $user]);
     }
 
-    public function update(Request $request, $id)
+    public function update(UserUpdateRequest $request, User $user)
     {
+        $user->update($request->validated());
+        return redirect()->route('admin.users.index');
     }
 
     public function handleBlockAttempt(User $user)
     {
         if($user->is_admin) return redirect()->back();
         $user->update(['is_blocked' => !$user->is_blocked]);
+        return redirect()->back();
+    }
+
+    public function handleAdminAttempt(User $user)
+    {
+        $user->update(['is_admin' => !$user->is_admin]);
         return redirect()->back();
     }
 

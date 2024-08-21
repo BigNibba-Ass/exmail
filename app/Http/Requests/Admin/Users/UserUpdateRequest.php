@@ -4,14 +4,13 @@ namespace App\Http\Requests\Admin\Users;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class UserRequest extends FormRequest
+class UserUpdateRequest extends UserRequest
 {
     public function rules(): array
     {
         return [
-            'name' => ['required'],
-            'email' => ['required', 'email', 'max:254'],
-            'password' => ['required', 'confirmed'],
+            ...parent::rules(),
+            'password' => ['nullable', 'confirmed'],
         ];
     }
 

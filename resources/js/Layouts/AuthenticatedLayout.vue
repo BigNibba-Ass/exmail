@@ -15,12 +15,6 @@ const getBack = () => {
 }
 
 
-const pages = [
-    {name: 'Профили', icon: UserCircleIcon, route: 'admin.users.index'},
-    {name: 'Экран 1', icon: DeviceTabletIcon, route: 'admin.main_screen.index'},
-    {name: 'Инф. база', icon: CircleStackIcon, route: 'admin.informations.index'},
-    {name: 'База КП', icon: BriefcaseIcon, route: 'dashboard'},
-]
 </script>
 
 <template>
@@ -34,7 +28,7 @@ const pages = [
                             <slot name="header"/>
                             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg w-full">
                                 <div class="w-full flex">
-                                    <div v-if="route().current('offer-test')" class="w-full flex">
+                                    <div v-if="route().current('offer-test') || route().current('admin.users.edit')" class="w-full flex">
                                         <a @click.prevent="getBack()"
                                            class="me-auto cursor-pointer inline-flex rounded-br-md items-center p-3 border border-transparent text-sm leading-4 font-medium shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
                                             Назад

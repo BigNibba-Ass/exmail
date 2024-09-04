@@ -9,16 +9,12 @@ return new class extends Migration {
     {
         Schema::create('areas', function (Blueprint $table) {
             $table->id();
-
-            $table->string('name');
+            $table->string('area_number');
+            $table->foreignIdFor(\App\Models\Service::class);
             $table->foreignIdFor(\App\Models\DeparturePoint::class, 'where_from');
             $table->foreignIdFor(\App\Models\DeparturePoint::class, 'where_to');
-            $table->foreignIdFor(\App\Models\Service::class);
-            $table->integer('weight_max');
-
-            $table->decimal('price_nds', 10, 2);
-            $table->decimal('price_nds_free', 10, 2);
-            $table->integer('terms');
+            $table->string('terms')->nullable();
+//            $table->unique(['service_id', 'where_from', 'where_to']);
             $table->timestamps();
         });
     }

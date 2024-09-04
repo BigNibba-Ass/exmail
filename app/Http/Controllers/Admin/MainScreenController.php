@@ -3,36 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Service;
 use Illuminate\Http\Request;
 
 class MainScreenController extends Controller
 {
     public function index()
     {
-        return inertia('Admin/MainScreen/Index');
-    }
-
-    public function create()
-    {
-    }
-
-    public function store(Request $request)
-    {
-    }
-
-    public function show($id)
-    {
-    }
-
-    public function edit($id)
-    {
-    }
-
-    public function update(Request $request, $id)
-    {
-    }
-
-    public function destroy($id)
-    {
+        return inertia('Admin/MainScreen/Index', ['services' => Service::get()]);
     }
 }

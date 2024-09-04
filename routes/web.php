@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\Admin\InformationsController;
 use App\Http\Controllers\Admin\MainScreenController;
+use App\Http\Controllers\Admin\OfferController;
+use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Middleware\UserIsAdminMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -22,10 +24,12 @@ Route::middleware(['auth'])->group(function () {
 
 
     Route::group(['prefix' => 'admin', 'as' => 'admin.', 'middleware' => [UserIsAdminMiddleware::class]], function () {
+        Route::get('/main_screen', [MainScreenController::class, 'index'])->name('main-screen');
         Route::resources([
             'users' => UserController::class,
-            'main_screen' => MainScreenController::class,
+            'services' => ServiceController::class,
             'informations' => InformationsController::class,
+            'offers' => OfferController::class,
         ]);
         Route::post('/users/handle_block_attempt/{user}', [UserController::class, 'handleBlockAttempt'])->name('users.handle-block-attempt');
         Route::post('/users/handle_admin_attempt/{user}', [UserController::class, 'handleAdminAttempt'])->name('users.handle-admin-attempt');

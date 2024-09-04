@@ -15,9 +15,11 @@ const props = defineProps({
 
 const pages = [
     {name: 'Профили', icon: UserCircleIcon, route: 'admin.users.index'},
-    {name: 'Экран 1', icon: DeviceTabletIcon, route: 'admin.main_screen.index'},
+    {name: 'Экран 1', icon: DeviceTabletIcon, route: 'admin.main-screen'},
+
     {name: 'Инф. база', icon: CircleStackIcon, route: 'admin.informations.index'},
-    {name: 'База КП', icon: BriefcaseIcon, route: 'dashboard'},
+
+    {name: 'База КП', icon: BriefcaseIcon, route: 'admin.offers.index'},
 ]
 </script>
 

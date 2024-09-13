@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Area;
 use App\Models\AreaPrice;
+use App\Models\Company;
 use App\Models\DeparturePoint;
 use Illuminate\Console\Command;
 use PhpOffice\PhpSpreadsheet\Cell\CellAddress;
@@ -18,7 +19,12 @@ class ExmailFillSecondCommand extends Command
 
     public function handle(): void
     {
-//        DeparturePoint::truncate();
+        $this->fillAreas();
+        $this->setPrices();
+    }
+
+    public function fillAreas()
+    {
         $inputFileType = 'Xlsx';
         $inputFileName = storage_path('trf.xlsx');
 
@@ -33,54 +39,69 @@ class ExmailFillSecondCommand extends Command
         $highestColumn = $worksheet->getHighestColumn(); // e.g 'F'
         $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
 
-        // Города с листа экспресс доставка
 
-//        for ($row = 4; $row <= 102; $row++) {
-//            DeparturePoint::create(['name' => $worksheet->getCell(new CellAddress('$' . 'B' . '$' . $row))]);
-//        }
-
-        // /Города с листа экспресс доставка
+        $serviceId = Company::find(Company::EXMAIL_COMPANY_ID)->services()->firstOrCreate(['name' => 'Сборный груз'])->id;
 
 
-        // Лист Экспресс Доставка
-//        for ($row = 3; $row <= 18; $row++) {
-//            for ($col = 2; $col <= $highestColumnIndex; $col += 2) {
-//                Area::create([
-//                    'area_number' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . $row)),
-//                    'where_from' => DeparturePoint::firstWhere(['name' => $worksheet->getCell(new CellAddress('$' . 'A' . '$' . $row))])->id,
-//                    'where_to' => DeparturePoint::firstWhere(['name' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '1'))])->id,
-//                    'service_id' => 2,
-//                    'terms' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col + 1) . '$' . $row)),
-//                ]);
-//            }
-//        }
-//        for ($col = 2; $col <= $highestColumnIndex; $col += 2) {
-//            for ($row = 3; $row <= 18; $row++) {
-//                Area::create([
-//                    'area_number' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . $row)),
-//                    'where_from' => DeparturePoint::firstWhere(['name' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '1'))])->id,
-//                    'where_to' => DeparturePoint::firstWhere(['name' => $worksheet->getCell(new CellAddress('$' . 'A' . '$' . $row))])->id,
-//                    'service_id' => 2,
-//                    'terms' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col + 1) . '$' . $row)),
-//                ]);
-//            }
-//        }
-        // /Лист экспресс доставка
+        for ($row = 3; $row <= 18; $row++) {
+            for ($col = 2; $col <= $highestColumnIndex; $col += 2) {
+                Area::create([
+                    'area_number' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . $row)),
+                    'where_from' => DeparturePoint::firstOrCreate(['name' => $worksheet->getCell(new CellAddress('$' . 'A' . '$' . $row))])->id,
+                    'where_to' => DeparturePoint::firstOrCreate(['name' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '1'))])->id,
+                    'service_id' => $serviceId,
+                    'terms' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col + 1) . '$' . $row)),
+                ]);
+            }
+        }
+    }
 
-        // Лист экспресс доставка цены
+    public function setPrices()
+    {
+        $inputFileType = 'Xlsx';
+        $inputFileName = storage_path('trf.xlsx');
 
-//        for ($row = 3; $row <= 18; $row++) {
-//            $area = $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex(1) . '$' . $row));
-//            for ($col = 2; $col <= $highestColumnIndex; $col++) {
-//                AreaPrice::create([
-//                    'service_id' => 1,
-//                    'area_number' => $area,
-//                    'weight_max' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '2')),
-//                    'price' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . $row))
-//                ]);
-//            }
-//        }
+        $reader = IOFactory::createReader($inputFileType);
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($inputFileName);
 
-        // /Лист экспресс доставка цены
+        $worksheet = $spreadsheet->getSheet(2);//
+
+
+//        $highestRow = $worksheet->getHighestRow(); // e.g. 10
+        $highestColumn = $worksheet->getHighestColumn(); // e.g 'F'
+        $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
+
+
+        $serviceId = Company::find(Company::EXMAIL_COMPANY_ID)->services()->firstOrCreate(['name' => 'Сборный груз'])->id;
+
+
+        for ($row = 3; $row <= 10; $row++) {
+            $area = $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex(1) . '$' . $row))->getValueString();
+            for ($col = 2; $col <= $highestColumnIndex; $col += 2) {
+                $weightArray = explode(';', $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '1'))->getValueString());
+                try {
+                    AreaPrice::create([
+                        'service_id' => $serviceId,
+                        'area_number' => $area,
+                        'weight_min' => trim($weightArray[0]),
+                        'weight_max' => trim($weightArray[1]),
+                        'price' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . $row))->getValueString(),
+                        'price_per_extra' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col + 1) . '$' . $row))->getValueString(),
+                        'extra_definition' => 1
+                    ]);
+                } catch (\Exception) {
+                    AreaPrice::create([
+                        'service_id' => $serviceId,
+                        'area_number' => $area,
+                        'weight_min' => trim($weightArray[0]),
+                        'weight_max' => trim($weightArray[1]),
+                        'price' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . $row))->getValueString(),
+                        'price_per_extra' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col + 1) . '$' . $row))->getCalculatedValueString(),
+                        'extra_definition' => 1
+                    ]);
+                }
+            }
+        }
     }
 }

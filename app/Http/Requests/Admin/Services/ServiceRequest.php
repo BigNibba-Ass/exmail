@@ -10,7 +10,7 @@ class ServiceRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string'],
-            'type' => ['required', 'string'],
+            'company_id' => ['required', 'int'],
         ];
     }
 

@@ -17,7 +17,8 @@ return new class extends Migration {
             $table->float('weight_min');
             $table->float('weight_max');
             $table->decimal('price', 10);
-            $table->decimal('price_per_extra_kg', 10);
+            $table->decimal('price_per_extra', 10)->nullable();
+            $table->float('extra_definition')->default(1);
 
             $table->unique(['service_id', 'area_number', 'weight_min', 'weight_max']);
             $table->timestamps();

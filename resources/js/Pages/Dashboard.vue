@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import {Head} from '@inertiajs/vue3';
-import {ref} from "vue";
+import {Head, router, usePage} from '@inertiajs/vue3';
+import {computed, ref, watch} from "vue";
 import ComparisonParamField from "@/Components/Calculator/ComparisonParamField.vue";
 import CustomSelect from "@/Components/CustomSelect.vue";
 import Modal from "@/Components/Modal.vue";
@@ -10,31 +10,37 @@ import ComparisonHoldField from "@/Components/Calculator/ComparisonHoldField.vue
 import DropdownLink from "@/Components/DropdownLink.vue";
 import Dropdown from "@/Components/Dropdown.vue";
 import {Link} from "@inertiajs/vue3";
+import {getElementByKey} from "../Traits.js";
+
+const form = ref({
+    exmail_service_id: 1,
+    where_from: 1,
+    where_to: 1,
+    weight: 0,
+    selected_comparable_services: [],
+})
+
+const props = defineProps({
+    exmail_services: Array,
+    companies: Array,
+    departure_points: Array,
+    prices: Array
+})
+
 
 const modals = ref({
     comparisonParams: false,
     comparableHolds: false,
 })
 
-const serviceTypes = [
-    {text: 'Экспресс-доставка от двери до двери', value: 0},
-    {text: 'Сборный груз Т-Т', value: 1},
-]
 const selectedComparisonParams = ref([])
+
+const selectedComparableHolds = ref([])
 
 const comparisonParams = [
     {
-        name: 'weight',
-        label: 'Вес, кг',
-        type: 'input',
-        attributes: {
-            type: 'number',
-            min: 0,
-        }
-    },
-    {
         name: 'discount',
-        label: 'Скидка, %',
+        label: 'Скидка ExMail, %',
         type: 'input',
         attributes: {
             type: 'number',
@@ -43,51 +49,41 @@ const comparisonParams = [
     },
     {
         name: 'markup',
-        label: 'Маржа, %',
+        label: 'Маржа ExMail, %',
         type: 'input',
         attributes: {
-            type: 'number',
-            min: 0,
-        },
-    },
-    // TODO: добавить/не добавлять (узнать что из этого) пункт параметров для сравнения
-    {
-        name: 'price_option',
-        label: 'Тариф',
-        type: 'select',
-        attributes: {
-            values: [],
-        },
-    },
-    {
-        name: 'area',
-        label: 'Зона',
-        type: 'select',
-        attributes: {
-            values: [],
+            value: 'Указана',
+            disabled: true,
         },
     },
     {
         name: 'terms',
         label: 'Сроки',
-        type: 'select',
+        type: 'input',
         attributes: {
-            values: [
-                {text: 'ExMail', value: 0},
-                {text: 'Срок конкурента', value: 1},
-            ],
+            value: 'Указаны',
+            disabled: true,
         },
     },
 ]
 
-const selectedComparableHolds = ref([])
+const comparisonParamsHas = (name) => {
+    for (const param of selectedComparisonParams.value) {
+        if (comparisonParams[param].name === name) return true
+    }
+    return false
+}
 
-const comparableHoldsAvailable = ref([
-    {id: 0, name: 'DPD', discountValue: 0},
-    {id: 1, name: 'MajorExpress', discountValue: 0},
-    {id: 2, name: 'PonyExpress', discountValue: 0},
-    {id: 3, name: 'КСЭ', discountValue: 0},
-])
+const calculate = () => {
+    console.log(form.value)
+    router.post(route('calculate'), form.value, {
+        onError: (err) => {
+            console.log(err)
+        }
+    })
+}
+
+// const results = computed(() => usePage().props.value?.flash)
 </script>
 
 <template>
@@ -128,11 +124,11 @@ const comparableHoldsAvailable = ref([
 
                 <fieldset>
                     <div class="mt-4 space-y-4">
-                        <div class="relative flex items-start" v-for="(param, key) of comparableHoldsAvailable">
+                        <div class="relative flex items-start" v-for="(param, key) of props.companies">
                             <div class="flex items-center h-5">
                                 <input :id="param.name + '_checkbox-hold'" type="checkbox"
                                        v-model="selectedComparableHolds"
-                                       :value="key"
+                                       :value="param.id"
                                        class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"/>
                             </div>
                             <div class="ml-3 text-sm">
@@ -146,92 +142,116 @@ const comparableHoldsAvailable = ref([
 
             </div>
         </Modal>
-        <form class="w-full">
-            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                <div class="sm:col-span-6 text-center">
-                    <h2 class="text-2xl font-bold">
-                        Расчет
-                    </h2>
-                </div>
-                <div class="sm:col-span-3">
-                    <label for="service-type" class="block text-sm font-medium text-gray-700">
-                        Вид услуги </label>
-                    <div class="mt-1">
-                        <custom-select
-                            id="service-type"
-                            :values="serviceTypes"/>
+        <div class="w-full">
+            <form @submit.prevent="calculate">
+                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                    <div class="sm:col-span-6 text-center">
+                        <h2 class="text-2xl font-bold">
+                            Расчет
+                        </h2>
                     </div>
-                </div>
-                <div class="sm:col-span-3">
-                    <label class="block text-sm font-medium text-gray-700">
-                        Загрузить файл (какой?) </label>
-                    <div class="mt-1">
-                        <input type="file">
+                    <div class="sm:col-span-3">
+                        <label for="service-type" class="block text-sm font-medium text-gray-700">
+                            Вид услуги ExMail
+                        </label>
+                        <div class="mt-1">
+                            <custom-select
+                                id="service-type"
+                                v-model="form.exmail_service_id"
+                                :values="props.exmail_services"/>
+                        </div>
                     </div>
-                </div>
-                <div class="sm:col-span-6 text-center mt-5">
-                    <h2 class="text-xl font-bold">
-                        Параметры для сравнения
-                    </h2>
-                </div>
-                <div class="sm:col-span-1">
-                    <label for="where-from" class="block text-sm font-medium text-gray-700">
-                        Откуда </label>
-                    <div class="mt-1">
-                        <input type="text" id="where-from"
-                               class="flex-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"/>
+                    <div class="sm:col-span-6 text-center mt-5">
+                        <h2 class="text-xl font-bold">
+                            Конкурент для сравнения
+                        </h2>
                     </div>
-                </div>
-                <div class="sm:col-span-1">
-                    <label for="where-to" class="block text-sm font-medium text-gray-700">
-                        Куда </label>
-                    <div class="mt-1">
-                        <input type="text" id="where-to"
-                               class="flex-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"/>
+                    <div class="sm:col-span-6"
+                         v-for="param of selectedComparableHolds">
+                        <comparison-hold-field
+                            @update:modelValue="form.selected_comparable_services.push($event)"
+                            :comparison-hold="getElementByKey(props.companies, param, 'id')"/>
                     </div>
-                </div>
-                <div class="sm:col-span-1"
-                     v-for="param of selectedComparisonParams">
-                    <comparison-param-field
-                        :comparison-param="comparisonParams[param]"/>
-                </div>
-                <div class="sm:col-span-1 flex items-center">
-                    <button class="mt-5" @click.prevent="modals.comparisonParams = true">
-                        <plus-circle-icon class="w-8 h-8 text-indigo-600"/>
-                    </button>
-                </div>
-                <div class="sm:col-span-6 text-center mt-5">
-                    <h2 class="text-xl font-bold">
-                        Конкурент для сравнения
-                    </h2>
-                </div>
-                <div class="sm:col-span-6"
-                     v-for="param of selectedComparableHolds">
-                    <comparison-hold-field
-                        :comparison-hold="comparableHoldsAvailable[param]"/>
-                </div>
-                <div class="sm:col-span-6 text-center">
+                    <div class="sm:col-span-6 text-center">
+                        <div class="sm:col-span-1 flex items-center">
+                            <button type="button" @click.prevent="modals.comparableHolds = true">
+                                <plus-circle-icon class="w-8 h-8 text-indigo-600"/>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="sm:col-span-6 text-center mt-5">
+                        <h2 class="text-xl font-bold">
+                            Параметры для сравнения
+                        </h2>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <label for="where-from" class="block text-sm font-medium text-gray-700">
+                            Откуда </label>
+                        <div class="mt-1">
+                            <custom-select
+                                v-model="form.where_from"
+                                id="where-from"
+                                :values="props.departure_points"
+                            />
+                        </div>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <label for="where-to" class="block text-sm font-medium text-gray-700">
+                            Куда </label>
+                        <div class="mt-1">
+                            <custom-select
+                                v-model="form.where_to"
+                                id="where-to"
+                                :values="props.departure_points"
+                            />
+                        </div>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <label for="weight" class="block text-sm font-medium text-gray-700">
+                            Вес </label>
+                        <div class="mt-1">
+                            <input type="number" id="weight"
+                                   step="0.01"
+                                   v-model="form.weight"
+                                   class="flex-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"/>
+                        </div>
+                    </div>
+                    <div class="sm:col-span-1">
+                        <label for="price" class="block text-sm font-medium text-gray-700">
+                            Тариф </label>
+                        <div class="mt-1">
+                            <input type="text" id="price"
+                                   disabled
+                                   value="Указан"
+                                   class="flex-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"/>
+                        </div>
+                    </div>
+                    <div class="sm:col-span-1"
+                         v-for="param of selectedComparisonParams">
+                        <comparison-param-field
+                            :comparison-param="comparisonParams[param]"/>
+                    </div>
                     <div class="sm:col-span-1 flex items-center">
-                        <button @click.prevent="modals.comparableHolds = true">
+                        <button type="button" class="mt-5" @click.prevent="modals.comparisonParams = true">
                             <plus-circle-icon class="w-8 h-8 text-indigo-600"/>
                         </button>
                     </div>
+                    <div class="sm:col-span-6">
+                        <label for="nds_included" class="font-medium text-gray-700">
+                            С НДС
+                        </label>
+                        <input id="nds_included"
+                               type="checkbox"
+                               class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded ml-2"/>
+                    </div>
+                    <div class="sm:col-span-6">
+                        <button type="submit"
+                                class="ms-auto inline-flex items-center p-3 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                            Рассчитать
+                        </button>
+                    </div>
                 </div>
-                <div class="sm:col-span-6">
-                    <label for="nds_included" class="font-medium text-gray-700">
-                        С НДС
-                    </label>
-                    <input id="nds_included"
-                           type="checkbox"
-                           class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded ml-2"/>
-                </div>
-                <div class="sm:col-span-6">
-                    <button type="button"
-                            class="ms-auto inline-flex items-center p-3 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
-                        Рассчитать
-                    </button>
-                </div>
-                <div class="sm:col-span-6">
+                <div class="sm:col-span-6 mt-5">
                     <div class="flex flex-col">
                         <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                             <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
@@ -249,13 +269,17 @@ const comparableHoldsAvailable = ref([
                                             <th rowspan="2" class="relative px-6 py-3">
                                                 Вес
                                             </th>
-                                            <th colspan="7" class="relative px-6 py-3 bg-green-200">
+                                            <th :colspan="1 + selectedComparableHolds.length * 2"
+                                                class="relative px-6 py-3 bg-green-200">
                                                 Тариф
                                             </th>
-                                            <th colspan="4" class="relative px-6 py-3 bg-blue-200">
-                                                Срок
+                                            <th v-if="comparisonParamsHas('terms')"
+                                                :colspan="1 + selectedComparableHolds.length"
+                                                class="relative px-6 py-3 bg-blue-200">
+                                                Сроки
                                             </th>
-                                            <th rowspan="1" class="relative px-6 py-3 bg-blue-500">
+                                            <th v-if="comparisonParamsHas('markup')" rowspan="1"
+                                                class="relative px-6 py-3 bg-blue-500">
                                                 Маржа
                                             </th>
                                         </tr>
@@ -263,37 +287,26 @@ const comparableHoldsAvailable = ref([
                                             <th rowspan="1" class="relative px-6 py-3 bg-green-200">
                                                 ExMail
                                             </th>
-                                            <th rowspan="1" class="relative px-6 py-3 bg-green-200">
-                                                КСЭ/тт
-                                            </th>
-                                            <th rowspan="1" class="relative px-6 py-3 bg-green-200">
-                                                Разница, %
-                                            </th>
-                                            <th rowspan="1" class="relative px-6 py-3 bg-green-200">
-                                                Major/тт
-                                            </th>
-                                            <th rowspan="1" class="relative px-6 py-3 bg-green-200">
-                                                Разница, %
-                                            </th>
-                                            <th rowspan="1" class="relative px-6 py-3 bg-green-200">
-                                                DPD/тт
-                                            </th>
-                                            <th rowspan="1" class="relative px-6 py-3 bg-green-200">
-                                                Разница, %
-                                            </th>
-                                            <th rowspan="1" class="relative px-6 py-3 bg-blue-200">
-                                                ExMail
-                                            </th>
-                                            <th rowspan="1" class="relative px-6 py-3 bg-blue-200">
-                                                КСЭ
-                                            </th>
-                                            <th rowspan="1" class="relative px-6 py-3 bg-blue-200">
-                                                Major
-                                            </th>
-                                            <th rowspan="1" class="relative px-6 py-3 bg-blue-200">
-                                                DPD
-                                            </th>
-                                            <th rowspan="1" class="relative px-6 py-3 bg-blue-500">
+                                            <template v-for="company of selectedComparableHolds">
+                                                <th rowspan="1" class="relative px-6 py-3 bg-green-200">
+                                                    {{ getElementByKey(props.companies, company, 'id').name }}/тт
+                                                </th>
+                                                <th rowspan="1" class="relative px-6 py-3 bg-green-200">
+                                                    Разница, %
+                                                </th>
+                                            </template>
+                                            <template v-if="comparisonParamsHas('terms')">
+                                                <th rowspan="1"
+                                                    class="relative px-6 py-3 bg-blue-200">
+                                                    ExMail
+                                                </th>
+                                                <td v-for="company of selectedComparableHolds"
+                                                    class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
+                                                    {{ getElementByKey(props.companies, company, 'id').name }}
+                                                </td>
+                                            </template>
+                                            <th rowspan="1" v-if="comparisonParamsHas('markup')"
+                                                class="relative px-6 py-3 bg-blue-500">
                                                 ExMail
                                             </th>
                                         </tr>
@@ -301,49 +314,46 @@ const comparableHoldsAvailable = ref([
                                         <tbody>
                                         <tr class="bg-white">
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                                тест
+                                                {{
+                                                    getElementByKey(props.departure_points, form.where_from, 'value').text
+                                                }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                                тест
+                                                {{
+                                                    getElementByKey(props.departure_points, form.where_to, 'value').text
+                                                }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                                тест
+                                                {{ form.weight }} кг
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                тест
+                                                {{ $page.props.flash.data?.exmail?.price || 'Не рассчитано' }} руб.
                                             </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                тест
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                тест
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                тест
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                тест
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                тест
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                тест
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
-                                                тест
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
-                                                тест
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
-                                                тест
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
-                                                тест
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-500">
-                                                тест
+                                            <template v-for="(key, company) of selectedComparableHolds">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
+                                                    {{ $page.props.flash?.data?.[company]?.price || 'Не рассчитано' }} руб.
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
+                                                    {{
+                                                        (($page.props.flash.data?.exmail?.price -
+                                                                $page.props.flash?.data?.[company]?.price) /
+                                                            $page.props.flash?.data?.[company]?.price) * 100
+                                                    }} %
+                                                </td>
+                                            </template>
+                                            <template v-if="comparisonParamsHas('terms')">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
+                                                    {{ $page.props.flash.data?.exmail?.terms ? $page.props.flash.data?.exmail?.terms + "дней" : 'Не указано' }}
+                                                </td>
+                                                <td v-for="(key, company) of selectedComparableHolds"
+                                                    class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
+                                                    {{ $page.props.flash.data?.[company]?.terms ? $page.props.flash.data?.exmail?.terms + "дней" : 'Не указано' }}
+
+                                                </td>
+                                            </template>
+                                            <td v-if="comparisonParamsHas('markup')"
+                                                class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-500">
+                                                маржа
                                             </td>
                                         </tr>
                                         </tbody>
@@ -353,7 +363,8 @@ const comparableHoldsAvailable = ref([
                         </div>
                     </div>
                 </div>
-
+            </form>
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 mt-5">
                 <div class="sm:col-span-3">
                     <button type="button"
                             class="ms-auto inline-flex w-full text-center justify-center items-center p-3 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
@@ -368,6 +379,6 @@ const comparableHoldsAvailable = ref([
                     </Link>
                 </div>
             </div>
-        </form>
+        </div>
     </AuthenticatedLayout>
 </template>

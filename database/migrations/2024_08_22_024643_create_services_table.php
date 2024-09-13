@@ -10,8 +10,8 @@ return new class extends Migration {
         Schema::create('services', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('type');
-            $table->unique(['name', 'type']);
+            $table->foreignIdFor(\App\Models\Company::class);
+            $table->unique(['name', 'company_id']);
             $table->timestamps();
         });
     }

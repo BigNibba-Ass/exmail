@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\MainScreenController;
 use App\Http\Controllers\Admin\OfferController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\CompanyController;
 use App\Http\Middleware\UserIsAdminMiddleware;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -13,11 +14,10 @@ Route::redirect('/', 'login');
 
 Route::middleware(['auth'])->group(function () {
 
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->middleware(['auth', 'verified'])->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/calculate', [\App\Http\Controllers\DashboardController::class, 'calculate'])->name('calculate');
 
-// TODO: to resource
+    // TODO: to resource
     Route::get('/offer-test', function () {
         return Inertia::render('Offer/Show');
     })->middleware(['auth', 'verified'])->name('offer-test');
@@ -28,6 +28,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resources([
             'users' => UserController::class,
             'services' => ServiceController::class,
+            'companies' => CompanyController::class,
             'informations' => InformationsController::class,
             'offers' => OfferController::class,
         ]);

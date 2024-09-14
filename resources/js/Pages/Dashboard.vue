@@ -78,8 +78,9 @@ const calculate = () => {
     console.log(form.value)
     router.post(route('calculate'), form.value, {
         onError: (err) => {
-            console.log(err)
-        }
+            alert(Object.values(err)[0])
+        },
+        preserveScroll: true,
     })
 }
 

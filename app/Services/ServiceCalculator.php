@@ -32,11 +32,6 @@ class ServiceCalculator
         $this->area = $areaQuery->first();
     }
 
-    public function calculate()
-    {
-
-    }
-
     /**
      * @throws ServiceCalculatorException
      */

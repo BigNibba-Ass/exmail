@@ -4,7 +4,11 @@ export const generateRandomString = () => {
 }
 
 export const getElementByKey = (elements, key, keyName) => {
-    for(const elem of elements) {
-        if(elem[keyName].toString() === key.toString()) return elem;
+    for (const elem of elements) {
+        if (elem[keyName].toString() === key.toString()) return elem;
     }
+}
+
+export const prettifyNumber = (number) => {
+    return Math.round(number * 100) / 100
 }

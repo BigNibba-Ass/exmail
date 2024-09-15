@@ -28,7 +28,7 @@ class DashboardController extends Controller
                 Company::where('id', '!=', Company::EXMAIL_COMPANY_ID)->with('services')->get()
             ),
             'departure_points' => CustomSelectResourceCollection::collection(
-                DeparturePoint::get(),
+                DeparturePoint::orderBy('name')->get(),
                 new CustomSelectProperties('name', 'id')
             )
         ]);
@@ -37,7 +37,7 @@ class DashboardController extends Controller
     public function calculate(CalculateRequest $request)
     {
         try {
-            $comparingServiceCalculator = new ServiceCalculator(
+            $exmailCalculator = new ServiceCalculator(
                 Service::find($request->get('exmail_service_id')),
                 DeparturePoint::find($request->get('where_from')),
                 DeparturePoint::find($request->get('where_to')),
@@ -56,8 +56,8 @@ class DashboardController extends Controller
             }
             return redirect()->back()->with('data', [
                 'exmail' => [
-                    'price' => $comparingServiceCalculator->getPrice($request->get('weight')),
-                    'terms' => $comparingServiceCalculator->getArea()->terms
+                    'price' => $exmailCalculator->getPrice($request->get('weight')),
+                    'terms' => $exmailCalculator->getArea()->terms
                 ],
                 ...$extraServices
             ]);

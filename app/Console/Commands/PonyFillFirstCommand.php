@@ -6,6 +6,7 @@ use App\Models\Area;
 use App\Models\AreaPrice;
 use App\Models\Company;
 use App\Models\DeparturePoint;
+use App\Services\ImportService;
 use Illuminate\Console\Command;
 use PhpOffice\PhpSpreadsheet\Cell\CellAddress;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -19,9 +20,9 @@ class PonyFillFirstCommand extends Command
 
     public function handle(): void
     {
-        $this->runAreaList(1);
-        $this->runAreaList(2);
-        $this->runAreaList(3);
+        for ($i = 1; $i <= 9; $i++) {
+            $this->runAreaList($i);
+        }
         $this->setPrices();
     }
 
@@ -37,7 +38,7 @@ class PonyFillFirstCommand extends Command
         $worksheet = $spreadsheet->getSheet($sheet);//
 
 
-//        $highestRow = $worksheet->getHighestRow(); // e.g. 10
+        $highestRow = $worksheet->getHighestRow(); // e.g. 10
         $highestColumn = $worksheet->getHighestColumn(); // e.g 'F'
         $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
 
@@ -45,12 +46,15 @@ class PonyFillFirstCommand extends Command
         $serviceId = Company::firstOrCreate(['name' => 'Pony Express'])->services()->firstOrCreate(['name' => 'Стандарт от двери до двери'])->id;
 
 
-        for ($row = 3; $row <= 45; $row++) {
-            for ($col = 2; $col <= $highestColumnIndex; $col += 1) {
+        for ($col = 3; $col <= $highestColumnIndex; $col++) {
+            for ($row = 4; $row <= $highestRow; $row++) {
+                $whereFrom = ImportService::formatDeparturePoint($worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '1'))->getValueString());
+                $whereTo = ImportService::formatDeparturePoint($worksheet->getCell(new CellAddress('$' . 'A' . '$' . $row))->getValueString());
+                if(!$whereTo || !$whereFrom) continue;
                 $val = [
                     'area_number' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . $row))->getValueString(),
-                    'where_from' => DeparturePoint::firstOrCreate(['name' => $worksheet->getCell(new CellAddress('$' . 'A' . '$' . $row))->getValueString()])->id,
-                    'where_to' => DeparturePoint::firstOrCreate(['name' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '2'))->getValueString()])->id,
+                    'where_from' => DeparturePoint::firstOrCreate(['name' => $whereFrom])->id,
+                    'where_to' => DeparturePoint::firstOrCreate(['name' => $whereTo])->id,
                     'service_id' => $serviceId,
                 ];
                 if ($val['area_number']) {
@@ -95,8 +99,7 @@ class PonyFillFirstCommand extends Command
                     ];
                     AreaPrice::create($val);
                 } catch (\Exception $exception) {
-                    dd($exception->getMessage());
-                    dd($worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . 3))->getValueString());
+                    continue;
                 }
             }
         }

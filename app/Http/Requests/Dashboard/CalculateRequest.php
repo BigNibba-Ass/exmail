@@ -12,7 +12,7 @@ class CalculateRequest extends FormRequest
             'exmail_service_id' => ['required', 'int'],
             'where_from' => ['required', 'int'],
             'where_to' => ['required', 'int'],
-            'weight' => ['required', 'numeric'],
+            'weight' => ['required', 'numeric', 'min:0.01'],
             'selected_comparable_services' => ['required', 'array'],
         ];
     }

@@ -8,6 +8,7 @@ use App\Models\AreaPrice;
 use App\Models\Company;
 use App\Models\DeparturePoint;
 use App\Models\Service;
+use App\Services\ImportService;
 use Illuminate\Console\Command;
 use PhpOffice\PhpSpreadsheet\Cell\CellAddress;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -38,7 +39,7 @@ class ExmailTableFillCommand extends Command
         $worksheet = $spreadsheet->getSheet(7);//
 
 
-//        $highestRow = $worksheet->getHighestRow(); // e.g. 10
+        $highestRow = $worksheet->getHighestRow(); // e.g. 10
         $highestColumn = $worksheet->getHighestColumn(); // e.g 'F'
         $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
 
@@ -46,12 +47,15 @@ class ExmailTableFillCommand extends Command
 
 
         // Лист Экспресс Доставка
-        for ($row = 4; $row <= 102; $row++) {
-            for ($col = 3; $col <= $highestColumnIndex; $col++) {
+        for ($col = 3; $col <= $highestColumnIndex; $col++) {
+            for ($row = 4; $row <= $highestRow; $row++) {
+                $whereFrom = ImportService::formatDeparturePoint($worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '3')));
+                $whereTo = ImportService::formatDeparturePoint($worksheet->getCell(new CellAddress('$' . 'B' . '$' . $row)));
+                if(!$whereTo || !$whereFrom) continue;
                 Area::create([
                     'area_number' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . $row)),
-                    'where_from' => DeparturePoint::firstOrCreate(['name' => $worksheet->getCell(new CellAddress('$' . 'B' . '$' . $row))])->id,
-                    'where_to' => DeparturePoint::firstOrCreate(['name' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '3'))])->id,
+                    'where_from' => DeparturePoint::firstOrCreate(['name' => $whereFrom])->id,
+                    'where_to' => DeparturePoint::firstOrCreate(['name' => $whereTo])->id,
                     'service_id' => $serviceId,
                     'terms' => null,
                 ]);

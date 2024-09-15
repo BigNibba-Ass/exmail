@@ -10,10 +10,12 @@ import ComparisonHoldField from "@/Components/Calculator/ComparisonHoldField.vue
 import DropdownLink from "@/Components/DropdownLink.vue";
 import Dropdown from "@/Components/Dropdown.vue";
 import {Link} from "@inertiajs/vue3";
-import {getElementByKey} from "../Traits.js";
+import {getElementByKey, prettifyNumber} from "../Traits.js";
+import vSelect from 'vue-select'
+import 'vue-select/dist/vue-select.css';
 
 const form = ref({
-    exmail_service_id: 1,
+    exmail_service_id: null,
     where_from: 1,
     where_to: 1,
     weight: 0,
@@ -158,6 +160,7 @@ const calculate = () => {
                         <div class="mt-1">
                             <custom-select
                                 id="service-type"
+                                placeholder="Услуга"
                                 v-model="form.exmail_service_id"
                                 :values="props.exmail_services"/>
                         </div>
@@ -189,22 +192,24 @@ const calculate = () => {
                         <label for="where-from" class="block text-sm font-medium text-gray-700">
                             Откуда </label>
                         <div class="mt-1">
-                            <custom-select
-                                v-model="form.where_from"
+                            <v-select
                                 id="where-from"
-                                :values="props.departure_points"
-                            />
+                                v-model="form.where_from"
+                                :reduce="elem => elem.value" label="text"
+                                :clearable="false"
+                                :options="props.departure_points"/>
                         </div>
                     </div>
                     <div class="sm:col-span-1">
                         <label for="where-to" class="block text-sm font-medium text-gray-700">
                             Куда </label>
                         <div class="mt-1">
-                            <custom-select
-                                v-model="form.where_to"
+                            <v-select
                                 id="where-to"
-                                :values="props.departure_points"
-                            />
+                                v-model="form.where_to"
+                                :reduce="elem => elem.value" label="text"
+                                :clearable="false"
+                                :options="props.departure_points"/>
                         </div>
                     </div>
                     <div class="sm:col-span-1">
@@ -336,9 +341,9 @@ const calculate = () => {
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
                                                     {{
-                                                        (($page.props.flash.data?.exmail?.price -
+                                                        prettifyNumber((($page.props.flash.data?.exmail?.price -
                                                                 $page.props.flash?.data?.[company]?.price) /
-                                                            $page.props.flash?.data?.[company]?.price) * 100
+                                                            $page.props.flash?.data?.[company]?.price) * 100)
                                                     }} %
                                                 </td>
                                             </template>

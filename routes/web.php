@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\OfferController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\CompanyController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Middleware\UserIsAdminMiddleware;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -14,8 +15,8 @@ Route::redirect('/', 'login');
 
 Route::middleware(['auth'])->group(function () {
 
-    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
-    Route::post('/calculate', [\App\Http\Controllers\DashboardController::class, 'calculate'])->name('calculate');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/calculate', [DashboardController::class, 'calculate'])->name('calculate');
 
     // TODO: to resource
     Route::get('/offer-test', function () {

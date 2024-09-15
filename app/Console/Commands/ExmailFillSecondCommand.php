@@ -35,7 +35,7 @@ class ExmailFillSecondCommand extends Command
         $worksheet = $spreadsheet->getSheet(1);//
 
 
-//        $highestRow = $worksheet->getHighestRow(); // e.g. 10
+        $highestRow = $worksheet->getHighestRow(); // e.g. 10
         $highestColumn = $worksheet->getHighestColumn(); // e.g 'F'
         $highestColumnIndex = Coordinate::columnIndexFromString($highestColumn);
 
@@ -43,12 +43,12 @@ class ExmailFillSecondCommand extends Command
         $serviceId = Company::find(Company::EXMAIL_COMPANY_ID)->services()->firstOrCreate(['name' => 'Сборный груз'])->id;
 
 
-        for ($row = 3; $row <= 18; $row++) {
+        for ($row = 3; $row <= $highestRow; $row++) {
             for ($col = 2; $col <= $highestColumnIndex; $col += 2) {
                 Area::create([
                     'area_number' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . $row)),
-                    'where_from' => DeparturePoint::firstOrCreate(['name' => $worksheet->getCell(new CellAddress('$' . 'A' . '$' . $row))])->id,
-                    'where_to' => DeparturePoint::firstOrCreate(['name' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '1'))])->id,
+                    'where_from' => DeparturePoint::firstOrCreate(['name' => trim($worksheet->getCell(new CellAddress('$' . 'A' . '$' . $row)))])->id,
+                    'where_to' => DeparturePoint::firstOrCreate(['name' => trim($worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '1')))])->id,
                     'service_id' => $serviceId,
                     'terms' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col + 1) . '$' . $row)),
                 ]);

@@ -45,12 +45,11 @@ class PonyFillFirstCommand extends Command
 
         $serviceId = Company::firstOrCreate(['name' => 'Pony Express'])->services()->firstOrCreate(['name' => 'Стандарт от двери до двери'])->id;
 
-
-        for ($col = 2; $col <= $highestColumnIndex; $col++) {
-            for ($row = 2; $row <= $highestRow; $row++) {
-                $whereFrom = ImportService::formatDeparturePoint($worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '1'))->getValueString());
-                $whereTo = ImportService::formatDeparturePoint($worksheet->getCell(new CellAddress('$' . 'A' . '$' . $row))->getValueString());
-                if(!$whereTo || !$whereFrom) continue;
+        for ($row = 2; $row <= $highestRow; $row++) {
+            for ($col = 2; $col <= $highestColumnIndex; $col++) {
+                $whereFrom = ImportService::formatDeparturePoint($worksheet->getCell(new CellAddress('$' . 'A' . '$' . $row))->getValueString());
+                $whereTo = ImportService::formatDeparturePoint($worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '1'))->getValueString());
+                if (!$whereTo || !$whereFrom) continue;
                 $val = [
                     'area_number' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . $row))->getValueString(),
                     'where_from' => DeparturePoint::firstOrCreate(['name' => $whereFrom])->id,

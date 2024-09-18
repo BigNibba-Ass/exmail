@@ -77,8 +77,14 @@ const comparisonParamsHas = (name) => {
 }
 
 const calculate = () => {
-    console.log(form.value)
-    router.post(route('calculate'), form.value, {
+    const formToSend = Object.assign({}, form.value)
+    formToSend.selected_comparable_services = []
+    for (const companyServices of form.value.selected_comparable_services) {
+        if (companyServices) {
+            formToSend.selected_comparable_services.push(companyServices[0])
+        }
+    }
+    router.post(route('calculate'), formToSend, {
         onError: (err) => {
             alert(Object.values(err)[0])
         },
@@ -86,7 +92,10 @@ const calculate = () => {
     })
 }
 
-// const results = computed(() => usePage().props.value?.flash)
+const pushComparableService = (company, service) => {
+    form.value.selected_comparable_services[company] = []
+    form.value.selected_comparable_services[company].push(service)
+}
 </script>
 
 <template>
@@ -173,7 +182,7 @@ const calculate = () => {
                     <div class="sm:col-span-6"
                          v-for="param of selectedComparableHolds">
                         <comparison-hold-field
-                            @update:modelValue="form.selected_comparable_services.push($event)"
+                            @update:modelValue="pushComparableService(param, $event)"
                             :comparison-hold="getElementByKey(props.companies, param, 'id')"/>
                     </div>
                     <div class="sm:col-span-6 text-center">
@@ -337,7 +346,8 @@ const calculate = () => {
                                             </td>
                                             <template v-for="(key, company) of selectedComparableHolds">
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                    {{ $page.props.flash?.data?.[company]?.price || 'Не рассчитано' }} руб.
+                                                    {{ $page.props.flash?.data?.[company]?.price || 'Не рассчитано' }}
+                                                    руб.
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
                                                     {{
@@ -349,11 +359,15 @@ const calculate = () => {
                                             </template>
                                             <template v-if="comparisonParamsHas('terms')">
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
-                                                    {{ $page.props.flash.data?.exmail?.terms ? $page.props.flash.data?.exmail?.terms + "дней" : 'Не указано' }}
+                                                    {{
+                                                        $page.props.flash.data?.exmail?.terms ? $page.props.flash.data?.exmail?.terms + "дней" : 'Не указано'
+                                                    }}
                                                 </td>
                                                 <td v-for="(key, company) of selectedComparableHolds"
                                                     class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
-                                                    {{ $page.props.flash.data?.[company]?.terms ? $page.props.flash.data?.exmail?.terms + "дней" : 'Не указано' }}
+                                                    {{
+                                                        $page.props.flash.data?.[company]?.terms ? $page.props.flash.data?.exmail?.terms + "дней" : 'Не указано'
+                                                    }}
 
                                                 </td>
                                             </template>

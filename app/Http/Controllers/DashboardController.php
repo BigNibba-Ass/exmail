@@ -44,6 +44,7 @@ class DashboardController extends Controller
             );
             $extraServices = [];
             foreach ($request->get('selected_comparable_services') as $extraService) {
+                if(!$extraService) continue;
                 $comparingServiceCalculator = new ServiceCalculator(
                     $service = Service::find($extraService),
                     DeparturePoint::find($request->get('where_from')),

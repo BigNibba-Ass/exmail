@@ -105,6 +105,12 @@ const pushComparableService = (company, service) => {
     form.value.selected_comparable_services[company] = []
     form.value.selected_comparable_services[company].push(service)
 }
+
+watch(selectedComparableHolds, value => {
+    console.log(Object.keys(form.value.selected_comparable_services))
+    console.log(Object.values(value))
+    Object.keys(form.value.selected_comparable_services).forEach((key) => !Object.values(value).includes(key) || delete form.value.selected_comparable_services[key]);
+}, {deep: true})
 </script>
 
 <template>

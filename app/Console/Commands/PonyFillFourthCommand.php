@@ -44,7 +44,7 @@ class PonyFillFourthCommand extends Command
         for ($row = 3; $row <= $highestRow; $row++) {
             $whereFrom = ImportService::formatDeparturePoint($worksheet->getCell(new CellAddress('$' . 'A' . '$' . $row))->getValueString());
             $whereTo = ImportService::formatDeparturePoint($worksheet->getCell(new CellAddress('$' . 'B' . '$' . $row))->getValueString());
-            $areaNumber = 'custom_' . $row;
+            $areaNumber = 'pony_sg_dd_custom_' . $row;
             if (!$whereTo || !$whereFrom) continue;
             $val = [
                 'area_number' => $areaNumber,

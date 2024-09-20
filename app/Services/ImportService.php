@@ -2,12 +2,14 @@
 
 namespace App\Services;
 
-class ImportService {
+class ImportService
+{
 
     public static function formatDeparturePoint($name)
     {
-        if($name === '-') $name = false;
-        if(is_numeric($name)) $name = false;
+        if ($name === '-') $name = false;
+        if (is_numeric($name)) $name = false;
+        $name = preg_replace("/\([^)]+\)/", "", $name);
         $name = trim($name);
         return str_replace(array("\r", "\n"), ' ', $name);
     }

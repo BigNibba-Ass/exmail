@@ -19,17 +19,20 @@ class ServiceCalculator
 
     protected Area $area;
 
+    protected int $sale = 0;
+
     /**
      * @throws ServiceCalculatorException
      */
-    public function __construct(Service $comparableService, DeparturePoint $whereFrom, DeparturePoint $whereTo)
+    public function __construct(Service $comparableService, DeparturePoint $whereFrom, DeparturePoint $whereTo, int|null $sale = 0)
     {
         $this->comparableService = $comparableService;
         $areaQuery = $this->comparableService->areas()->where(['where_from' => $whereFrom->id, 'where_to' => $whereTo->id]);
         if (!$areaQuery->exists()) {
-            throw new ServiceCalculatorException("Зона для ".$this->comparableService->company()->first()->name." не найдена. Для выбранных услуг нет совпадающих точек отправления");
+            throw new ServiceCalculatorException("Зона для " . $this->comparableService->company()->first()->name . " не найдена. Для выбранных услуг нет совпадающих точек отправления");
         }
         $this->area = $areaQuery->first();
+        $this->sale = $sale ?? 0;
     }
 
     /**
@@ -69,6 +72,9 @@ class ServiceCalculator
             }
             $price += $priceObj->price_per_extra * $timesToMultiplyBy * 100;
             $priceObj->price = $price / 100;
+        }
+        if ($this->sale) {
+            $priceObj->price = $priceObj->price * ((100 - $this->sale) / 100);
         }
         return $priceObj->price;
     }

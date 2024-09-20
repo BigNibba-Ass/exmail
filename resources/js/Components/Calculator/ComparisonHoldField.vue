@@ -1,12 +1,22 @@
 <script setup>
 
 import CustomSelect from "@/Components/CustomSelect.vue";
+import {ref, watch} from "vue";
 
 const props = defineProps({
     comparisonHold: Object,
 })
 
 const emit = defineEmits(['update:modelValue'])
+
+const instance = ref({
+    sale: null,
+    service: null
+})
+
+watch(instance, value => {
+    emit('update:modelValue', value)
+}, {deep: true})
 </script>
 
 <template>
@@ -17,13 +27,14 @@ const emit = defineEmits(['update:modelValue'])
             </div>
             <input
                 :id="props.comparisonHold.name"
+                v-model="instance.sale"
                 placeholder="Скидка, %"
-                min="1"
+                min="0"
                 max="100"
                 type="number"
                 class="flex-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"/>
             <custom-select
-                @update:modelValue="emit('update:modelValue', $event)"
+                v-model="instance.service"
                 :placeholder="'Вид услуги ' + props.comparisonHold.name"
                 :values="props.comparisonHold.services"/>
         </div>

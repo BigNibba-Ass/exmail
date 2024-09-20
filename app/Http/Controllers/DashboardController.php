@@ -41,14 +41,16 @@ class DashboardController extends Controller
                 Service::find($request->get('exmail_service_id')),
                 DeparturePoint::find($request->get('where_from')),
                 DeparturePoint::find($request->get('where_to')),
+                $request->get('exmail_sale'),
             );
             $extraServices = [];
             foreach ($request->get('selected_comparable_services') as $extraService) {
                 if(!$extraService) continue;
                 $comparingServiceCalculator = new ServiceCalculator(
-                    $service = Service::find($extraService),
+                    $service = Service::find($extraService['service']),
                     DeparturePoint::find($request->get('where_from')),
                     DeparturePoint::find($request->get('where_to')),
+                    $extraService['sale']
                 );
                 $extraServices[$service->company_id] = [
                     'price' => $comparingServiceCalculator->getPrice($request->get('weight')),

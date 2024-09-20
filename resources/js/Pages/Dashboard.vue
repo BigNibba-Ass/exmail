@@ -10,12 +10,14 @@ import ComparisonHoldField from "@/Components/Calculator/ComparisonHoldField.vue
 import DropdownLink from "@/Components/DropdownLink.vue";
 import Dropdown from "@/Components/Dropdown.vue";
 import {Link} from "@inertiajs/vue3";
-import {getElementByKey, prettifyNumber} from "../Traits.js";
+import {getElementByKey, prettifyNumber, priceValue} from "../Traits.js";
 import vSelect from 'vue-select'
 import 'vue-select/dist/vue-select.css';
 
 const form = ref({
     exmail_service_id: null,
+    exmail_sale: null,
+    exmail_markup: null,
     where_from: 1,
     where_to: 1,
     weight: 0,
@@ -47,7 +49,13 @@ const comparisonParams = [
         attributes: {
             type: 'number',
             min: 0,
-        }
+            value: form.value.exmail_sale
+        },
+        events: {
+            input: (event) => {
+                form.value.exmail_sale = event.target.value
+            }
+        },
     },
     {
         name: 'markup',
@@ -78,6 +86,7 @@ const comparisonParamsHas = (name) => {
 
 const calculate = () => {
     const formToSend = Object.assign({}, form.value)
+    console.log(formToSend)
     formToSend.selected_comparable_services = []
     for (const companyServices of form.value.selected_comparable_services) {
         if (companyServices) {
@@ -342,12 +351,15 @@ const pushComparableService = (company, service) => {
                                                 {{ form.weight }} кг
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                {{ $page.props.flash.data?.exmail?.price || 'Не рассчитано' }} руб.
+                                                {{
+                                                    priceValue($page.props.flash.data?.exmail?.price) || 'Не рассчитано'
+                                                }}
                                             </td>
                                             <template v-for="(key, company) of selectedComparableHolds">
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                    {{ $page.props.flash?.data?.[company]?.price || 'Не рассчитано' }}
-                                                    руб.
+                                                    {{
+                                                        priceValue($page.props.flash?.data?.[company]?.price) || 'Не рассчитано'
+                                                    }}
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
                                                     {{

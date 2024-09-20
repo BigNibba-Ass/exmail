@@ -10,6 +10,7 @@ class CalculateRequest extends FormRequest
     {
         return [
             'exmail_service_id' => ['required', 'int'],
+            'exmail_sale' => ['nullable', 'int'],
             'where_from' => ['required', 'int'],
             'where_to' => ['required', 'int'],
             'weight' => ['required', 'numeric', 'min:0.01'],

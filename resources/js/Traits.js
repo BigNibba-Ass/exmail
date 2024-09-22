@@ -14,6 +14,7 @@ export const prettifyNumber = (number) => {
 }
 
 export const priceValue = (number) => {
+    if(!number) return null
     const options1 = { style: 'currency', currency: 'RUB' };
     return new Intl.NumberFormat('ru-RU', options1).format(number);
 }

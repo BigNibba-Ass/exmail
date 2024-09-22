@@ -107,8 +107,6 @@ const pushComparableService = (company, service) => {
 }
 
 watch(selectedComparableHolds, value => {
-    console.log(Object.keys(form.value.selected_comparable_services))
-    console.log(Object.values(value))
     Object.keys(form.value.selected_comparable_services).forEach((key) => !Object.values(value).includes(key) || delete form.value.selected_comparable_services[key]);
 }, {deep: true})
 </script>
@@ -391,7 +389,7 @@ watch(selectedComparableHolds, value => {
                                             </template>
                                             <td v-if="comparisonParamsHas('markup')"
                                                 class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-500">
-                                                маржа
+                                                {{ priceValue($page.props.flash.data?.exmail?.markup) || 'Невозможно расчитать' }}
                                             </td>
                                         </tr>
                                         </tbody>

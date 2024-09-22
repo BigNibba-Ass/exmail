@@ -6,6 +6,7 @@ use App\Models\Area;
 use App\Models\AreaPrice;
 use App\Models\Company;
 use App\Models\DeparturePoint;
+use App\Models\Service;
 use App\Services\ImportService;
 use Box\Spout\Reader\Common\Creator\ReaderEntityFactory;
 use Illuminate\Console\Command;
@@ -21,27 +22,23 @@ class ExmailFillInitial extends Command
 
     public function handle(): void
     {
-        ini_set('memory_limit', '-1');
-        $this->runAreaList();
+        $files = [storage_path('exmail_initial_1.xlsx'), storage_path('exmail_initial_2.xlsx'), storage_path('exmail_initial_3.xlsx')];
+        foreach ($files as $file) {
+            $this->runAreaList($file);
+        }
     }
 
-    public function runAreaList()
+    public function runAreaList($filePath)
     {
-        $filePath = storage_path('exmail_initial_1.xlsx');
         $reader = ReaderEntityFactory::createReaderFromFile($filePath);
         $reader->open($filePath);
 
-        $serviceId = Company::firstOrCreate(['name' => 'Exmail'])->services()->firstOrCreate(['name' => 'Себестоимость'])->id;
+        $serviceId = Company::firstOrCreate(['name' => 'Exmail'])->services()->firstOrCreate(['name' => Service::$EXMAIL_INITIAL_SERVICE_NAME])->id;
 
 
-        foreach ($reader->getSheetIterator() as $sheetNum => $sheet) {
+        foreach ($reader->getSheetIterator() as $sheet) {
             foreach ($sheet->getRowIterator() as $key => $row) {
                 if ($key === 1) continue;
-                if ($key === 2) continue;
-                if ($key === 3) continue;
-                if ($key === 4) continue;
-                dd($row, $key);
-                if ($key === 96) continue;
                 $rowArray = $row->toArray();
                 $areaNumber = 'exmail_init_custom_' . $rowArray[1] . "__" . $rowArray[4];
                 Area::firstOrCreate([

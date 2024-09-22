@@ -8,8 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Service extends Model
 {
-    protected $fillable = ['name', 'company_id'];
+    public static string $EXMAIL_INITIAL_SERVICE_NAME = 'Себестоимость';
 
+    protected $fillable = ['name', 'company_id'];
 
     public function areas(): HasMany
     {

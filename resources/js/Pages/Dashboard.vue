@@ -86,18 +86,17 @@ const comparisonParamsHas = (name) => {
 
 const calculate = () => {
     const formToSend = Object.assign({}, form.value)
-    console.log(formToSend)
     formToSend.selected_comparable_services = []
     for (const companyServices of form.value.selected_comparable_services) {
         if (companyServices) {
             formToSend.selected_comparable_services.push(companyServices[0])
         }
     }
+
     router.post(route('calculate'), formToSend, {
         onError: (err) => {
             alert(Object.values(err)[0])
         },
-        preserveScroll: true,
     })
 }
 
@@ -369,7 +368,7 @@ watch(selectedComparableHolds, value => {
                                                     {{
                                                         prettifyNumber((($page.props.flash.data?.exmail?.price -
                                                                 $page.props.flash?.data?.[company]?.price) /
-                                                            $page.props.flash?.data?.[company]?.price) * 100)
+                                                            $page.props.flash.data?.exmail?.price) * 100)
                                                     }} %
                                                 </td>
                                             </template>
@@ -389,7 +388,9 @@ watch(selectedComparableHolds, value => {
                                             </template>
                                             <td v-if="comparisonParamsHas('markup')"
                                                 class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-500">
-                                                {{ priceValue($page.props.flash.data?.exmail?.markup) || 'Невозможно расчитать' }}
+                                                {{
+                                                    priceValue($page.props.flash.data?.exmail?.markup) || 'Невозможно расчитать'
+                                                }}
                                             </td>
                                         </tr>
                                         </tbody>

@@ -358,7 +358,7 @@ watch(selectedComparableHolds, value => {
                                                     priceValue($page.props.flash.data?.exmail?.price) || 'Не рассчитано'
                                                 }}
                                             </td>
-                                            <template v-for="(key, company) of selectedComparableHolds">
+                                            <template v-for="company of selectedComparableHolds">
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
                                                     {{
                                                         priceValue($page.props.flash?.data?.[company]?.price) || 'Не рассчитано'
@@ -375,15 +375,14 @@ watch(selectedComparableHolds, value => {
                                             <template v-if="comparisonParamsHas('terms')">
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
                                                     {{
-                                                        $page.props.flash.data?.exmail?.terms ? $page.props.flash.data?.exmail?.terms + "дней" : 'Не указано'
+                                                        $page.props.flash.data?.exmail?.terms ? $page.props.flash.data?.exmail?.terms + " д." : 'Не указано'
                                                     }}
                                                 </td>
-                                                <td v-for="(key, company) of selectedComparableHolds"
+                                                <td v-for="company of selectedComparableHolds"
                                                     class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
                                                     {{
-                                                        $page.props.flash.data?.[company]?.terms ? $page.props.flash.data?.exmail?.terms + "дней" : 'Не указано'
+                                                        $page.props.flash.data?.[company]?.terms ? $page.props.flash.data?.exmail?.terms + " д." : 'Не указано'
                                                     }}
-
                                                 </td>
                                             </template>
                                             <td v-if="comparisonParamsHas('markup')"

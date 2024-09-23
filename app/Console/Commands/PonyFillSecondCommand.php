@@ -77,7 +77,7 @@ class PonyFillSecondCommand extends Command
         $reader->setReadDataOnly(true);
         $spreadsheet = $reader->load($inputFileName);
 
-        $worksheet = $spreadsheet->getSheet(1);//
+        $worksheet = $spreadsheet->getSheet(0);//
 
 
         $highestRow = $worksheet->getHighestRow(); // e.g. 10

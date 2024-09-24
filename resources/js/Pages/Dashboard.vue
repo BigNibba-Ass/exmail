@@ -381,7 +381,7 @@ watch(selectedComparableHolds, value => {
                                                 <td v-for="company of selectedComparableHolds"
                                                     class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
                                                     {{
-                                                        $page.props.flash.data?.[company]?.terms ? $page.props.flash.data?.exmail?.terms + " д." : 'Не указано'
+                                                        $page.props.flash.data?.[company]?.terms ? $page.props.flash.data?.[company]?.terms + " д." : 'Не указано'
                                                     }}
                                                 </td>
                                             </template>

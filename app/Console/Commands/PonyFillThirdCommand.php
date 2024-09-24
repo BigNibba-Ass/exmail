@@ -25,7 +25,7 @@ class PonyFillThirdCommand extends Command
             Company::firstOrCreate(['name' => 'Pony Express'])->services()->firstOrCreate(['name' => 'Экспресс от экспресс-центра до двери'])->id,
         ];
         foreach ($services as $service) {
-            for ($i = 3; $i <= 10; $i++) {
+            for ($i = 2; $i <= 10; $i++) {
                 $this->runAreaList($i, $service);
             }
             $this->setPrices($service);

@@ -21,7 +21,7 @@ class DashboardController extends Controller
     {
         return inertia('Dashboard', [
             'exmail_services' => CustomSelectResourceCollection::collection(
-                Company::find(Company::EXMAIL_COMPANY_ID)->services,
+                Company::find(Company::EXMAIL_COMPANY_ID)->services()->where('name', '!=', 'Себестоимость')->get(),
                 new CustomSelectProperties('name', 'id')
             ),
             'companies' => CompanyResource::collection(
@@ -36,8 +36,8 @@ class DashboardController extends Controller
 
     public function calculate(CalculateRequest $request)
     {
+        $services = [];
         try {
-            $services = [];
             $exmailCalculator = new ServiceCalculator(
                 Service::find($request->get('exmail_service_id')),
                 DeparturePoint::find($request->get('where_from')),
@@ -66,11 +66,17 @@ class DashboardController extends Controller
                 'terms' => $exmailCalculator->getArea()->terms,
                 'markup' => $markup,
             ];
+        } catch (ServiceCalculatorException $exception) {
+            return redirect()->back()->withErrors(['calculation' => $exception->getMessage()]);
+        }
 
-            foreach ($request->get('selected_comparable_services') as $extraService) {
-                if (!$extraService) continue;
+
+        foreach ($request->get('selected_comparable_services') as $extraService) {
+            if (!$extraService) continue;
+            $service = Service::find($extraService['service']);
+            try {
                 $comparingServiceCalculator = new ServiceCalculator(
-                    $service = Service::find($extraService['service']),
+                    $service,
                     DeparturePoint::find($request->get('where_from')),
                     DeparturePoint::find($request->get('where_to')),
                     $extraService['sale']
@@ -79,10 +85,13 @@ class DashboardController extends Controller
                     'price' => $comparingServiceCalculator->getPrice($request->get('weight')),
                     'terms' => $comparingServiceCalculator->getArea()->terms,
                 ];
+            } catch (ServiceCalculatorException $exception) {
+                $services[$service->company_id] = [
+                    'price' => $exception->getMessage(),
+                    'terms' => null,
+                ];
             }
-            return redirect()->back()->with('data', $services);
-        } catch (ServiceCalculatorException $exception) {
-            return redirect()->back()->withErrors(['calculation' => $exception->getMessage()]);
         }
+        return redirect()->back()->with('data', $services);
     }
 }

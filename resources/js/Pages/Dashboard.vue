@@ -22,6 +22,7 @@ const form = ref({
     where_to: 1,
     weight: 0,
     selected_comparable_services: [],
+    nds_included: false,
 })
 
 const props = defineProps({
@@ -104,10 +105,6 @@ const pushComparableService = (company, service) => {
     form.value.selected_comparable_services[company] = []
     form.value.selected_comparable_services[company].push(service)
 }
-
-watch(selectedComparableHolds, value => {
-    Object.keys(form.value.selected_comparable_services).forEach((key) => !Object.values(value).includes(key) || delete form.value.selected_comparable_services[key]);
-}, {deep: true})
 </script>
 
 <template>
@@ -268,6 +265,7 @@ watch(selectedComparableHolds, value => {
                             С НДС
                         </label>
                         <input id="nds_included"
+                               :checked="form.nds_included" @change="form.nds_included = $event.target.checked"
                                type="checkbox"
                                class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded ml-2"/>
                     </div>
@@ -388,7 +386,7 @@ watch(selectedComparableHolds, value => {
                                             <td v-if="comparisonParamsHas('markup')"
                                                 class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-500">
                                                 {{
-                                                    priceValue($page.props.flash.data?.exmail?.markup) || 'Невозможно расчитать'
+                                                    $page.props.flash.data?.exmail?.markup + ' %' || 'Невозможно расчитать'
                                                 }}
                                             </td>
                                         </tr>

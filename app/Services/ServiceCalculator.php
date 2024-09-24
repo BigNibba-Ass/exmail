@@ -29,7 +29,7 @@ class ServiceCalculator
         $this->comparableService = $comparableService;
         $areaQuery = $this->comparableService->areas()->where(['where_from' => $whereFrom->id, 'where_to' => $whereTo->id]);
         if (!$areaQuery->exists()) {
-            throw new ServiceCalculatorException("Зона для " . $this->comparableService->company()->first()->name . " не найдена. Для выбранных услуг нет совпадающих точек отправления");
+            throw new ServiceCalculatorException("Зона не найдена");
         }
         $this->area = $areaQuery->first();
         $this->sale = $sale ?? 0;
@@ -38,7 +38,7 @@ class ServiceCalculator
     /**
      * @throws ServiceCalculatorException
      */
-    public function getPrice(float $weight)
+    public function getPrice(float $weight, bool $includeNDS = false)
     {
         $priceQuery = $this->comparableService
             ->areaPrices()
@@ -57,11 +57,11 @@ class ServiceCalculator
                     });
             });
         if (!$priceQuery->exists()) {
-            throw new ServiceCalculatorException("У " . $this->comparableService->company()->first()->name . " для этой зоны не указан тариф");
+            throw new ServiceCalculatorException("Не указан тариф");
         }
         $priceObj = $priceQuery->first();
         if ($priceObj->price_per_extra) {
-            $price = $priceObj->price * 100;
+            $priceToWorkWith = $priceObj->price * 100;
             $timesToMultiplyBy = 0;
             for ($i = $priceObj->weight_min; $i < $weight; $i += $priceObj->extra_definition) {
                 if ($priceObj->weight_max === 0.0) {
@@ -70,11 +70,14 @@ class ServiceCalculator
                     $timesToMultiplyBy++;
                 }
             }
-            $price += $priceObj->price_per_extra * $timesToMultiplyBy * 100;
-            $priceObj->price = $price / 100;
+            $priceToWorkWith += $priceObj->price_per_extra * $timesToMultiplyBy * 100;
+            $priceObj->price = $priceToWorkWith / 100;
         }
         if ($this->sale) {
             $priceObj->price = $priceObj->price * ((100 - $this->sale) / 100);
+        }
+        if($includeNDS) {
+            $priceObj->price += 20 / 100 * $priceObj->price;
         }
         return $priceObj->price;
     }

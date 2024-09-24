@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class CalculateRequest extends FormRequest
 {
+
     public function rules(): array
     {
         return [
@@ -15,6 +16,7 @@ class CalculateRequest extends FormRequest
             'where_to' => ['required', 'int'],
             'weight' => ['required', 'numeric', 'min:0.01'],
             'selected_comparable_services' => ['required', 'array'],
+            'nds_included' => ['nullable', 'bool'],
         ];
     }
 

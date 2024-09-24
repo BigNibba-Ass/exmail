@@ -46,23 +46,20 @@ class DashboardController extends Controller
             );
 
             $markup = null;
-            try {
-                $service = Service::firstWhere(['name' => Service::$EXMAIL_INITIAL_SERVICE_NAME]);
-                if ($service) {
-                    $exmailInitialCalculator = new ServiceCalculator(
-                        $service,
-                        DeparturePoint::find($request->get('where_from')),
-                        DeparturePoint::find($request->get('where_to')),
-                        $request->get('exmail_sale'),
-                    );
-                    $salePrice = $exmailCalculator->getPrice($request->get('weight'));
-                    $markup = (($salePrice - $exmailInitialCalculator->getPrice($request->get('weight'))) / $salePrice) * 100;
-                }
-            } catch (\Exception) {
+            $service = Service::firstWhere(['name' => Service::$EXMAIL_INITIAL_SERVICE_NAME]);
+            if ($service) {
+                $exmailInitialCalculator = new ServiceCalculator(
+                    $service,
+                    DeparturePoint::find($request->get('where_from')),
+                    DeparturePoint::find($request->get('where_to')),
+                    $request->get('exmail_sale'),
+                );
+                $salePrice = $exmailCalculator->getPrice($request->get('weight'));
+                $markup = (($salePrice - $exmailInitialCalculator->getPrice($request->get('weight'))) / $salePrice) * 100;
             }
 
             $services['exmail'] = [
-                'price' => $exmailCalculator->getPrice($request->get('weight')),
+                'price' => $exmailCalculator->getPrice($request->get('weight'), $request->get('nds_included')),
                 'terms' => $exmailCalculator->getArea()->terms,
                 'markup' => $markup,
             ];
@@ -82,7 +79,7 @@ class DashboardController extends Controller
                     $extraService['sale']
                 );
                 $services[$service->company_id] = [
-                    'price' => $comparingServiceCalculator->getPrice($request->get('weight')),
+                    'price' => $comparingServiceCalculator->getPrice($request->get('weight'), $request->get('nds_included')),
                     'terms' => $comparingServiceCalculator->getArea()->terms,
                 ];
             } catch (ServiceCalculatorException $exception) {

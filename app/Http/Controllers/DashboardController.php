@@ -41,9 +41,10 @@ class DashboardController extends Controller
             $exmailCalculator = new ServiceCalculator(
                 Service::find($request->get('exmail_service_id')),
                 DeparturePoint::find($request->get('where_from')),
-                DeparturePoint::find($request->get('where_to')),
-                $request->get('exmail_sale'),
+                DeparturePoint::find($request->get('where_to')
+                ),
             );
+            $salePrice = $exmailCalculator->getPrice($request->get('weight'), $request->get('nds_included'), $request->get('exmail_sale'));
 
             $markup = null;
             $service = Service::firstWhere(['name' => Service::$EXMAIL_INITIAL_SERVICE_NAME]);
@@ -52,14 +53,12 @@ class DashboardController extends Controller
                     $service,
                     DeparturePoint::find($request->get('where_from')),
                     DeparturePoint::find($request->get('where_to')),
-                    $request->get('exmail_sale'),
                 );
-                $salePrice = $exmailCalculator->getPrice($request->get('weight'));
                 $markup = (($salePrice - $exmailInitialCalculator->getPrice($request->get('weight'))) / $salePrice) * 100;
             }
 
             $services['exmail'] = [
-                'price' => $exmailCalculator->getPrice($request->get('weight'), $request->get('nds_included')),
+                'price' => $salePrice,
                 'terms' => $exmailCalculator->getArea()->terms,
                 'markup' => $markup,
             ];
@@ -76,10 +75,9 @@ class DashboardController extends Controller
                     $service,
                     DeparturePoint::find($request->get('where_from')),
                     DeparturePoint::find($request->get('where_to')),
-                    $extraService['sale']
                 );
                 $services[$service->company_id] = [
-                    'price' => $comparingServiceCalculator->getPrice($request->get('weight'), $request->get('nds_included')),
+                    'price' => $comparingServiceCalculator->getPrice($request->get('weight'), $request->get('nds_included'), $request->get('exmail_sale')),
                     'terms' => $comparingServiceCalculator->getArea()->terms,
                 ];
             } catch (ServiceCalculatorException $exception) {

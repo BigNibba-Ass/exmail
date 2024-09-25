@@ -19,12 +19,10 @@ class ServiceCalculator
 
     protected Area $area;
 
-    protected int $sale = 0;
-
     /**
      * @throws ServiceCalculatorException
      */
-    public function __construct(Service $comparableService, DeparturePoint $whereFrom, DeparturePoint $whereTo, int|null $sale = 0)
+    public function __construct(Service $comparableService, DeparturePoint $whereFrom, DeparturePoint $whereTo)
     {
         $this->comparableService = $comparableService;
         $areaQuery = $this->comparableService->areas()->where(['where_from' => $whereFrom->id, 'where_to' => $whereTo->id]);
@@ -32,13 +30,12 @@ class ServiceCalculator
             throw new ServiceCalculatorException("Зона не найдена");
         }
         $this->area = $areaQuery->first();
-        $this->sale = $sale ?? 0;
     }
 
     /**
      * @throws ServiceCalculatorException
      */
-    public function getPrice(float $weight, bool $includeNDS = false)
+    public function getPrice(float $weight, bool $includeNDS = false, int $sale = 0)
     {
         $priceQuery = $this->comparableService
             ->areaPrices()
@@ -73,8 +70,8 @@ class ServiceCalculator
             $priceToWorkWith += $priceObj->price_per_extra * $timesToMultiplyBy * 100;
             $priceObj->price = $priceToWorkWith / 100;
         }
-        if ($this->sale) {
-            $priceObj->price = $priceObj->price * ((100 - $this->sale) / 100);
+        if ($sale) {
+            $priceObj->price = $priceObj->price * ((100 - $sale) / 100);
         }
         if($includeNDS) {
             $priceObj->price += 20 / 100 * $priceObj->price;

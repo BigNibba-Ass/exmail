@@ -35,7 +35,7 @@ class ServiceCalculator
     /**
      * @throws ServiceCalculatorException
      */
-    public function getPrice(float $weight, bool $includeNDS = false, int $sale = 0)
+    public function getPrice(float $weight, bool|null $includeNDS = false, int|null $sale = 0)
     {
         $priceQuery = $this->comparableService
             ->areaPrices()

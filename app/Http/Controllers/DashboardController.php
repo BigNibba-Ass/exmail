@@ -44,24 +44,30 @@ class DashboardController extends Controller
                 DeparturePoint::find($request->get('where_to')
                 ),
             );
-            $salePrice = $exmailCalculator->getPrice($request->get('weight'), $request->get('nds_included'), $request->get('exmail_sale'));
+            $exmailPrice = $exmailCalculator->getPrice($request->get('weight'), $request->get('nds_included'));
 
             $markup = null;
-            $service = Service::firstWhere(['name' => Service::$EXMAIL_INITIAL_SERVICE_NAME]);
-            if ($service) {
+            $priceWithMarkup = null;
+            $initialService = Service::firstWhere(['name' => Service::$EXMAIL_INITIAL_SERVICE_NAME]);
+            if ($initialService) {
                 $exmailInitialCalculator = new ServiceCalculator(
-                    $service,
+                    $initialService,
                     DeparturePoint::find($request->get('where_from')),
                     DeparturePoint::find($request->get('where_to')),
                 );
-                $markup = (($salePrice - $exmailInitialCalculator->getPrice($request->get('weight'))) / $salePrice) * 100;
+                $markup = (($exmailPrice - $exmailInitialCalculator->getPrice($request->get('weight'))) / $exmailPrice) * 100;
             }
 
             $services['exmail'] = [
-                'price' => $salePrice,
+                'price' => $exmailPrice,
                 'terms' => $exmailCalculator->getArea()->terms,
                 'markup' => $markup,
             ];
+            if ($sale = $request->get('exmail_sale')) {
+                $services['exmail']['price_with_sale'] = $exmailPrice * ((100 - $sale) / 100);
+            } elseif ($request->get('exmail_markup') && $initialService) {
+                $services['exmail']['price_with_markup'] = ($exmailInitialCalculator->getPrice($request->get('weight')) / (1 - ($request->get('exmail_markup') / 100)));
+            }
         } catch (ServiceCalculatorException $exception) {
             return redirect()->back()->withErrors(['calculation' => $exception->getMessage()]);
         }
@@ -77,9 +83,12 @@ class DashboardController extends Controller
                     DeparturePoint::find($request->get('where_to')),
                 );
                 $services[$service->company_id] = [
-                    'price' => $comparingServiceCalculator->getPrice($request->get('weight'), $request->get('nds_included'), $request->get('exmail_sale')),
+                    'price' => $price = $comparingServiceCalculator->getPrice($request->get('weight'), $request->get('nds_included')),
                     'terms' => $comparingServiceCalculator->getArea()->terms,
                 ];
+                if ($sale = $extraService['sale']) {
+                    $services[$service->company_id]['price'] = $price * ((100 - $sale) / 100);
+                }
             } catch (ServiceCalculatorException $exception) {
                 $services[$service->company_id] = [
                     'price' => $exception->getMessage(),

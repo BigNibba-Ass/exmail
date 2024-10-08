@@ -1,4 +1,3 @@
-
 export const generateRandomString = () => {
     return Math.random().toString(36).slice(-8);
 }
@@ -10,12 +9,11 @@ export const getElementByKey = (elements, key, keyName) => {
 }
 
 export const prettifyNumber = (number) => {
-    return Math.round(number * 100) / 100
+    return (Math.round(number * 100) / 100).toFixed(0)
 }
 
 export const priceValue = (number) => {
-    if(!number) return number
-    if(isNaN(Number(number))) return number
-    const options1 = { style: 'currency', currency: 'RUB' };
-    return new Intl.NumberFormat('ru-RU', options1).format(number);
+    if (!number) return number
+    if (isNaN(Number(number))) return number
+    return number.toFixed(0) + " ₽"
 }

@@ -35,7 +35,7 @@ class ServiceCalculator
     /**
      * @throws ServiceCalculatorException
      */
-    public function getPrice(float $weight, bool|null $includeNDS = false, int|null $sale = 0)
+    public function getPrice(float $weight, bool|null $includeNDS = false)
     {
         $priceQuery = $this->comparableService
             ->areaPrices()
@@ -69,9 +69,6 @@ class ServiceCalculator
             }
             $priceToWorkWith += $priceObj->price_per_extra * $timesToMultiplyBy * 100;
             $priceObj->price = $priceToWorkWith / 100;
-        }
-        if ($sale) {
-            $priceObj->price = $priceObj->price * ((100 - $sale) / 100);
         }
         if($includeNDS) {
             $priceObj->price += 20 / 100 * $priceObj->price;

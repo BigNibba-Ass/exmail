@@ -47,10 +47,11 @@ const comparisonParams = [
         name: 'discount',
         label: 'Скидка ExMail, %',
         type: 'input',
+        dependentlyDisabled: 'markup',
         attributes: {
             type: 'number',
             min: 0,
-            value: form.value.exmail_sale
+            value: form.value.exmail_sale,
         },
         events: {
             input: (event) => {
@@ -62,9 +63,17 @@ const comparisonParams = [
         name: 'markup',
         label: 'Маржа ExMail, %',
         type: 'input',
+        dependentlyDisabled: 'discount',
         attributes: {
-            value: 'Указана',
-            disabled: true,
+            type: 'number',
+            min: 0,
+            step: 0.01,
+            value: form.value.exmail_markup,
+        },
+        events: {
+            input: (event) => {
+                form.value.exmail_markup = event.target.value
+            }
         },
     },
     {
@@ -123,6 +132,7 @@ const pushComparableService = (company, service) => {
                             <div class="flex items-center h-5">
                                 <input :id="param.name + '_checkbox-param'" type="checkbox"
                                        v-model="selectedComparisonParams"
+                                       :disabled="param.dependentlyDisabled ? comparisonParamsHas(param.dependentlyDisabled) : false"
                                        :value="key"
                                        class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"/>
                             </div>
@@ -314,7 +324,7 @@ const pushComparableService = (company, service) => {
                                             </th>
                                             <template v-for="company of selectedComparableHolds">
                                                 <th rowspan="1" class="relative px-6 py-3 bg-green-200">
-                                                    {{ getElementByKey(props.companies, company, 'id').name }}/тт
+                                                    {{ getElementByKey(props.companies, company, 'id').name }}
                                                 </th>
                                                 <th rowspan="1" class="relative px-6 py-3 bg-green-200">
                                                     Разница, %
@@ -352,9 +362,21 @@ const pushComparableService = (company, service) => {
                                                 {{ form.weight }} кг
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                {{
+                                                Цена: {{
                                                     priceValue($page.props.flash.data?.exmail?.price) || 'Не рассчитано'
                                                 }}
+                                                <template v-if="comparisonParamsHas('discount')">
+                                                    <br/>
+                                                    Цена со скидкой: {{
+                                                        priceValue($page.props.flash.data?.exmail?.price_with_sale) || 'Не рассчитано'
+                                                    }}
+                                                </template>
+                                                <template v-if="comparisonParamsHas('markup')">
+                                                    <br/>
+                                                    Цена при марже: {{
+                                                        priceValue($page.props.flash.data?.exmail?.price_with_markup) || 'Не рассчитано'
+                                                    }}
+                                                </template>
                                             </td>
                                             <template v-for="company of selectedComparableHolds">
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
@@ -363,11 +385,27 @@ const pushComparableService = (company, service) => {
                                                     }}
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                    {{
+                                                    Цены: {{
                                                         prettifyNumber((($page.props.flash.data?.exmail?.price -
                                                                 $page.props.flash?.data?.[company]?.price) /
                                                             $page.props.flash.data?.exmail?.price) * 100)
                                                     }} %
+                                                    <template v-if="comparisonParamsHas('discount')">
+                                                        <br/>
+                                                        Цены со скидкой: {{
+                                                            prettifyNumber((($page.props.flash.data?.exmail?.price_with_sale -
+                                                                    $page.props.flash?.data?.[company]?.price) /
+                                                                $page.props.flash.data?.exmail?.price_with_sale) * 100)
+                                                        }} %
+                                                    </template>
+                                                    <template v-if="comparisonParamsHas('markup')">
+                                                        <br/>
+                                                        Цены с маржой: {{
+                                                            prettifyNumber((($page.props.flash.data?.exmail?.price_with_markup -
+                                                                    $page.props.flash?.data?.[company]?.price) /
+                                                                $page.props.flash.data?.exmail?.price_with_markup) * 100)
+                                                        }} %
+                                                    </template>
                                                 </td>
                                             </template>
                                             <template v-if="comparisonParamsHas('terms')">

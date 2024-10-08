@@ -5,22 +5,17 @@ import {computed, ref, watch} from "vue";
 import ComparisonParamField from "@/Components/Calculator/ComparisonParamField.vue";
 import CustomSelect from "@/Components/CustomSelect.vue";
 import Modal from "@/Components/Modal.vue";
-import {PlusCircleIcon} from "@heroicons/vue/24/solid/index.js";
+import {PlusCircleIcon, PencilSquareIcon} from "@heroicons/vue/24/solid/index.js";
 import ComparisonHoldField from "@/Components/Calculator/ComparisonHoldField.vue";
 import DropdownLink from "@/Components/DropdownLink.vue";
 import Dropdown from "@/Components/Dropdown.vue";
 import {Link} from "@inertiajs/vue3";
 import {getElementByKey, prettifyNumber, priceValue} from "../Traits.js";
-import vSelect from 'vue-select'
-import 'vue-select/dist/vue-select.css';
+import CalculationItem from "@/Components/Calculator/CalculationItem.vue";
 
 const form = ref({
     exmail_service_id: null,
-    exmail_sale: null,
-    exmail_markup: null,
-    where_from: 1,
-    where_to: 1,
-    weight: 0,
+    calculation_items: [],
     selected_comparable_services: [],
     nds_included: false,
 })
@@ -44,36 +39,25 @@ const selectedComparableHolds = ref([])
 
 const comparisonParams = [
     {
-        name: 'discount',
+        name: 'exmail_sale',
         label: 'Скидка ExMail, %',
         type: 'input',
-        dependentlyDisabled: 'markup',
-        attributes: {
-            type: 'number',
-            min: 0,
-            value: form.value.exmail_sale,
-        },
-        events: {
-            input: (event) => {
-                form.value.exmail_sale = event.target.value
-            }
-        },
-    },
-    {
-        name: 'markup',
-        label: 'Маржа ExMail, %',
-        type: 'input',
-        dependentlyDisabled: 'discount',
+        dependentlyDisabled: 'exmail_markup',
         attributes: {
             type: 'number',
             min: 0,
             step: 0.01,
-            value: form.value.exmail_markup,
-        },
-        events: {
-            input: (event) => {
-                form.value.exmail_markup = event.target.value
-            }
+        }
+    },
+    {
+        name: 'exmail_markup',
+        label: 'Маржа ExMail, %',
+        type: 'input',
+        dependentlyDisabled: 'exmail_sale',
+        attributes: {
+            type: 'number',
+            min: 0,
+            step: 0.01,
         },
     },
     {
@@ -82,6 +66,7 @@ const comparisonParams = [
         type: 'input',
         attributes: {
             value: 'Указаны',
+            placeholder: 'Указаны',
             disabled: true,
         },
     },
@@ -102,7 +87,6 @@ const calculate = () => {
             formToSend.selected_comparable_services.push(companyServices[0])
         }
     }
-
     router.post(route('calculate'), formToSend, {
         onError: (err) => {
             alert(Object.values(err)[0])
@@ -114,6 +98,25 @@ const pushComparableService = (company, service) => {
     form.value.selected_comparable_services[company] = []
     form.value.selected_comparable_services[company].push(service)
 }
+
+const addCalculationItem = () => {
+    form.value.calculation_items.push({
+        exmail_sale: null,
+        exmail_markup: null,
+        terms: 'Указаны',
+        where_from: 1,
+        where_to: 1,
+        weight: 0,
+    })
+}
+
+const removeCalculationItem = (index) => {
+    form.value.calculation_items.splice(index, 1); // 2nd parameter means remove one item only
+}
+
+watch(form, value => {
+    // console.log(form)
+}, {deep: true})
 </script>
 
 <template>
@@ -194,9 +197,14 @@ const pushComparableService = (company, service) => {
                         </div>
                     </div>
                     <div class="sm:col-span-6 text-center mt-5">
-                        <h2 class="text-xl font-bold">
-                            Конкурент для сравнения
-                        </h2>
+                        <div class="flex items-center justify-center gap-x-4">
+                            <h2 class="text-xl font-bold">
+                                Конкурент для сравнения
+                            </h2>
+                            <button type="button" @click.prevent="modals.comparableHolds = true">
+                                <pencil-square-icon class="w-5 h-5 text-indigo-600"/>
+                            </button>
+                        </div>
                     </div>
                     <div class="sm:col-span-6"
                          v-for="param of selectedComparableHolds">
@@ -204,72 +212,34 @@ const pushComparableService = (company, service) => {
                             @update:modelValue="pushComparableService(param, $event)"
                             :comparison-hold="getElementByKey(props.companies, param, 'id')"/>
                     </div>
-                    <div class="sm:col-span-6 text-center">
-                        <div class="sm:col-span-1 flex items-center">
-                            <button type="button" @click.prevent="modals.comparableHolds = true">
-                                <plus-circle-icon class="w-8 h-8 text-indigo-600"/>
+                    <div class="sm:col-span-6 text-center mt-5">
+                        <div class="flex items-center justify-center gap-x-4">
+                            <h2 class="text-xl font-bold">
+                                Параметры для сравнения
+                            </h2>
+                            <button type="button" @click.prevent="modals.comparisonParams = true">
+                                <pencil-square-icon class="w-5 h-5 text-indigo-600"/>
                             </button>
                         </div>
                     </div>
-                    <div class="sm:col-span-6 text-center mt-5">
-                        <h2 class="text-xl font-bold">
-                            Параметры для сравнения
-                        </h2>
-                    </div>
-                    <div class="sm:col-span-1">
-                        <label for="where-from" class="block text-sm font-medium text-gray-700">
-                            Откуда </label>
-                        <div class="mt-1">
-                            <v-select
-                                id="where-from"
-                                v-model="form.where_from"
-                                :reduce="elem => elem.value" label="text"
-                                :clearable="false"
-                                :options="props.departure_points"/>
-                        </div>
-                    </div>
-                    <div class="sm:col-span-1">
-                        <label for="where-to" class="block text-sm font-medium text-gray-700">
-                            Куда </label>
-                        <div class="mt-1">
-                            <v-select
-                                id="where-to"
-                                v-model="form.where_to"
-                                :reduce="elem => elem.value" label="text"
-                                :clearable="false"
-                                :options="props.departure_points"/>
-                        </div>
-                    </div>
-                    <div class="sm:col-span-1">
-                        <label for="weight" class="block text-sm font-medium text-gray-700">
-                            Вес </label>
-                        <div class="mt-1">
-                            <input type="number" id="weight"
-                                   step="0.01"
-                                   v-model="form.weight"
-                                   class="flex-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"/>
-                        </div>
-                    </div>
-                    <div class="sm:col-span-1">
-                        <label for="price" class="block text-sm font-medium text-gray-700">
-                            Тариф </label>
-                        <div class="mt-1">
-                            <input type="text" id="price"
-                                   disabled
-                                   value="Указан"
-                                   class="flex-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"/>
-                        </div>
-                    </div>
-                    <div class="sm:col-span-1"
-                         v-for="param of selectedComparisonParams">
-                        <comparison-param-field
-                            :comparison-param="comparisonParams[param]"/>
-                    </div>
+
+                    <calculation-item
+                        v-for="(item, i) of form.calculation_items"
+                        v-model="form.calculation_items[i]"
+                        @remove="removeCalculationItem(i)"
+                        class="sm:col-span-6"
+                        :departure_points="props.departure_points"
+                        :selected-comparison-params="selectedComparisonParams"
+                        :comparison-params="comparisonParams"
+                    />
+
+
                     <div class="sm:col-span-1 flex items-center">
-                        <button type="button" class="mt-5" @click.prevent="modals.comparisonParams = true">
+                        <button type="button" class="mt-5" @click.prevent="addCalculationItem">
                             <plus-circle-icon class="w-8 h-8 text-indigo-600"/>
                         </button>
                     </div>
+
                     <div class="sm:col-span-6">
                         <label for="nds_included" class="font-medium text-gray-700">
                             С НДС
@@ -313,7 +283,7 @@ const pushComparableService = (company, service) => {
                                                 class="relative px-6 py-3 bg-blue-200">
                                                 Сроки
                                             </th>
-                                            <th v-if="comparisonParamsHas('markup')" rowspan="1"
+                                            <th v-if="comparisonParamsHas('exmail_markup')" rowspan="1"
                                                 class="relative px-6 py-3 bg-blue-500">
                                                 Маржа
                                             </th>
@@ -340,70 +310,70 @@ const pushComparableService = (company, service) => {
                                                     {{ getElementByKey(props.companies, company, 'id').name }}
                                                 </td>
                                             </template>
-                                            <th rowspan="1" v-if="comparisonParamsHas('markup')"
+                                            <th rowspan="1" v-if="comparisonParamsHas('exmail_markup')"
                                                 class="relative px-6 py-3 bg-blue-500">
                                                 ExMail
                                             </th>
                                         </tr>
                                         </thead>
                                         <tbody>
-                                        <tr class="bg-white">
+                                        <tr class="bg-white" v-for="item of $page.props.flash.data">
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                                 {{
-                                                    getElementByKey(props.departure_points, form.where_from, 'value').text
+                                                    item.misc.where_from
                                                 }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                                 {{
-                                                    getElementByKey(props.departure_points, form.where_to, 'value').text
+                                                    item.misc.where_to
                                                 }}
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                                {{ form.weight }} кг
+                                                {{ item.misc.weight }} кг
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
                                                 Цена: {{
-                                                    priceValue($page.props.flash.data?.exmail?.price) || 'Не рассчитано'
+                                                    priceValue(item?.exmail?.price) || 'Не рассчитано'
                                                 }}
-                                                <template v-if="comparisonParamsHas('discount')">
+                                                <template v-if="comparisonParamsHas('exmail_sale')">
                                                     <br/>
                                                     Цена со скидкой: {{
-                                                        priceValue($page.props.flash.data?.exmail?.price_with_sale) || 'Не рассчитано'
+                                                        priceValue(item?.exmail?.price_with_sale) || 'Не рассчитано'
                                                     }}
                                                 </template>
-                                                <template v-if="comparisonParamsHas('markup')">
+                                                <template v-if="comparisonParamsHas('exmail_markup')">
                                                     <br/>
                                                     Цена при марже: {{
-                                                        priceValue($page.props.flash.data?.exmail?.price_with_markup) || 'Не рассчитано'
+                                                        priceValue(item?.exmail?.price_with_markup) || 'Не рассчитано'
                                                     }}
                                                 </template>
                                             </td>
                                             <template v-for="company of selectedComparableHolds">
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
                                                     {{
-                                                        priceValue($page.props.flash?.data?.[company]?.price) || 'Не рассчитано'
+                                                        priceValue(item?.[company]?.price) || 'Не рассчитано'
                                                     }}
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
                                                     Цены: {{
-                                                        prettifyNumber((($page.props.flash.data?.exmail?.price -
-                                                                $page.props.flash?.data?.[company]?.price) /
-                                                            $page.props.flash.data?.exmail?.price) * 100)
+                                                        prettifyNumber(((item?.exmail?.price -
+                                                                item?.[company]?.price) /
+                                                            item?.exmail?.price) * 100)
                                                     }} %
-                                                    <template v-if="comparisonParamsHas('discount')">
+                                                    <template v-if="comparisonParamsHas('exmail_sale')">
                                                         <br/>
                                                         Цены со скидкой: {{
-                                                            prettifyNumber((($page.props.flash.data?.exmail?.price_with_sale -
-                                                                    $page.props.flash?.data?.[company]?.price) /
-                                                                $page.props.flash.data?.exmail?.price_with_sale) * 100)
+                                                            prettifyNumber(((item?.exmail?.price_with_sale -
+                                                                    item?.[company]?.price) /
+                                                                item?.exmail?.price_with_sale) * 100)
                                                         }} %
                                                     </template>
-                                                    <template v-if="comparisonParamsHas('markup')">
+                                                    <template v-if="comparisonParamsHas('exmail_markup')">
                                                         <br/>
                                                         Цены с маржой: {{
-                                                            prettifyNumber((($page.props.flash.data?.exmail?.price_with_markup -
-                                                                    $page.props.flash?.data?.[company]?.price) /
-                                                                $page.props.flash.data?.exmail?.price_with_markup) * 100)
+                                                            prettifyNumber(((item?.exmail?.price_with_markup -
+                                                                    item?.[company]?.price) /
+                                                                item?.exmail?.price_with_markup) * 100)
                                                         }} %
                                                     </template>
                                                 </td>
@@ -411,20 +381,20 @@ const pushComparableService = (company, service) => {
                                             <template v-if="comparisonParamsHas('terms')">
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
                                                     {{
-                                                        $page.props.flash.data?.exmail?.terms ? $page.props.flash.data?.exmail?.terms + " д." : 'Не указано'
+                                                        item?.exmail?.terms ? item?.exmail?.terms + " д." : 'Не указано'
                                                     }}
                                                 </td>
                                                 <td v-for="company of selectedComparableHolds"
                                                     class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
                                                     {{
-                                                        $page.props.flash.data?.[company]?.terms ? $page.props.flash.data?.[company]?.terms + " д." : 'Не указано'
+                                                        item?.[company]?.terms ? item?.[company]?.terms + " д." : 'Не указано'
                                                     }}
                                                 </td>
                                             </template>
-                                            <td v-if="comparisonParamsHas('markup')"
+                                            <td v-if="comparisonParamsHas('exmail_markup')"
                                                 class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-500">
                                                 {{
-                                                    $page.props.flash.data?.exmail?.markup + ' %' || 'Невозможно расчитать'
+                                                    prettifyNumber(item?.exmail?.markup) + ' %' || 'Невозможно расчитать'
                                                 }}
                                             </td>
                                         </tr>

@@ -11,11 +11,7 @@ class CalculateRequest extends FormRequest
     {
         return [
             'exmail_service_id' => ['required', 'int'],
-            'exmail_sale' => ['nullable', 'numeric'],
-            'exmail_markup' => ['nullable', 'numeric'],
-            'where_from' => ['required', 'int'],
-            'where_to' => ['required', 'int'],
-            'weight' => ['required', 'numeric', 'min:0.01'],
+            'calculation_items' => ['required', 'array'],
             'selected_comparable_services' => ['required', 'array'],
             'nds_included' => ['nullable', 'bool'],
         ];

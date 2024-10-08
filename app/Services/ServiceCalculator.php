@@ -27,9 +27,14 @@ class ServiceCalculator
         $this->comparableService = $comparableService;
         $areaQuery = $this->comparableService->areas()->where(['where_from' => $whereFrom->id, 'where_to' => $whereTo->id]);
         if (!$areaQuery->exists()) {
-            throw new ServiceCalculatorException("Зона не найдена");
+            throw new ServiceCalculatorException("Зона не найдена (" . $this->getCompanyName() . ")");
         }
         $this->area = $areaQuery->first();
+    }
+
+    public function getCompanyName()
+    {
+        return $this->comparableService->company()->first()->name;
     }
 
     /**
@@ -54,7 +59,7 @@ class ServiceCalculator
                     });
             });
         if (!$priceQuery->exists()) {
-            throw new ServiceCalculatorException("Не указан тариф");
+            throw new ServiceCalculatorException("Не указан тариф (" . $this->getCompanyName() . ")");
         }
         $priceObj = $priceQuery->first();
         if ($priceObj->price_per_extra) {

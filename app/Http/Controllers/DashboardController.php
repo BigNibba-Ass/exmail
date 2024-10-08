@@ -36,66 +36,77 @@ class DashboardController extends Controller
 
     public function calculate(CalculateRequest $request)
     {
-        $services = [];
-        try {
-            $exmailCalculator = new ServiceCalculator(
-                Service::find($request->get('exmail_service_id')),
-                DeparturePoint::find($request->get('where_from')),
-                DeparturePoint::find($request->get('where_to')
-                ),
-            );
-            $exmailPrice = $exmailCalculator->getPrice($request->get('weight'), $request->get('nds_included'));
+        $data = [];
+        foreach ($request->get('calculation_items') as $item) {
+            $services = [];
 
-            $markup = null;
-            $priceWithMarkup = null;
-            $initialService = Service::firstWhere(['name' => Service::$EXMAIL_INITIAL_SERVICE_NAME]);
-            if ($initialService) {
-                $exmailInitialCalculator = new ServiceCalculator(
-                    $initialService,
-                    DeparturePoint::find($request->get('where_from')),
-                    DeparturePoint::find($request->get('where_to')),
-                );
-                $markup = (($exmailPrice - $exmailInitialCalculator->getPrice($request->get('weight'))) / $exmailPrice) * 100;
-            }
+            $whereFrom = DeparturePoint::find($item['where_from']);
+            $whereTo = DeparturePoint::find($item['where_to']);
 
-            $services['exmail'] = [
-                'price' => $exmailPrice,
-                'terms' => $exmailCalculator->getArea()->terms,
-                'markup' => $markup,
+            $services['misc'] = [
+                'where_from' => $whereFrom->name,
+                'where_to' => $whereTo->name,
+                'weight' => $item['weight'],
             ];
-            if ($sale = $request->get('exmail_sale')) {
-                $services['exmail']['price_with_sale'] = $exmailPrice * ((100 - $sale) / 100);
-            } elseif ($request->get('exmail_markup') && $initialService) {
-                $services['exmail']['price_with_markup'] = ($exmailInitialCalculator->getPrice($request->get('weight')) / (1 - ($request->get('exmail_markup') / 100)));
-            }
-        } catch (ServiceCalculatorException $exception) {
-            return redirect()->back()->withErrors(['calculation' => $exception->getMessage()]);
-        }
-
-
-        foreach ($request->get('selected_comparable_services') as $extraService) {
-            if (!$extraService) continue;
-            $service = Service::find($extraService['service']);
             try {
-                $comparingServiceCalculator = new ServiceCalculator(
-                    $service,
-                    DeparturePoint::find($request->get('where_from')),
-                    DeparturePoint::find($request->get('where_to')),
+                $exmailCalculator = new ServiceCalculator(
+                    Service::find($request->get('exmail_service_id')),
+                    $whereFrom,
+                    $whereTo,
                 );
-                $services[$service->company_id] = [
-                    'price' => $price = $comparingServiceCalculator->getPrice($request->get('weight'), $request->get('nds_included')),
-                    'terms' => $comparingServiceCalculator->getArea()->terms,
+                $exmailPrice = $exmailCalculator->getPrice($item['weight'], $request->get('nds_included'));
+
+                $markup = null;
+                $initialService = Service::firstWhere(['name' => Service::$EXMAIL_INITIAL_SERVICE_NAME]);
+                if ($initialService) {
+                    $exmailInitialCalculator = new ServiceCalculator(
+                        $initialService,
+                        $whereFrom,
+                        $whereTo,
+                    );
+                    $markup = (($exmailPrice - $exmailInitialCalculator->getPrice($item['weight'])) / $exmailPrice) * 100;
+                }
+
+                $services['exmail'] = [
+                    'price' => $exmailPrice,
+                    'terms' => $exmailCalculator->getArea()->terms,
+                    'markup' => $markup,
                 ];
-                if ($sale = $extraService['sale']) {
-                    $services[$service->company_id]['price'] = $price * ((100 - $sale) / 100);
+                if ($sale = $item['exmail_sale']) {
+                    $services['exmail']['price_with_sale'] = $exmailPrice * ((100 - $sale) / 100);
+                } elseif ($item['exmail_markup'] && $initialService) {
+                    $services['exmail']['price_with_markup'] = ($exmailInitialCalculator->getPrice($item['weight']) / (1 - ($item['exmail_markup'] / 100)));
                 }
             } catch (ServiceCalculatorException $exception) {
-                $services[$service->company_id] = [
-                    'price' => $exception->getMessage(),
-                    'terms' => null,
-                ];
+                return redirect()->back()->withErrors(['calculation' => $exception->getMessage()]);
             }
+
+
+            foreach ($request->get('selected_comparable_services') as $extraService) {
+                if (!$extraService) continue;
+                $service = Service::find($extraService['service']);
+                try {
+                    $comparingServiceCalculator = new ServiceCalculator(
+                        $service,
+                        $whereFrom,
+                        $whereTo
+                    );
+                    $services[$service->company_id] = [
+                        'price' => $price = $comparingServiceCalculator->getPrice($item['weight'], $request->get('nds_included')),
+                        'terms' => $comparingServiceCalculator->getArea()->terms,
+                    ];
+                    if ($sale = $extraService['sale']) {
+                        $services[$service->company_id]['price'] = $price * ((100 - $sale) / 100);
+                    }
+                } catch (ServiceCalculatorException $exception) {
+                    $services[$service->company_id] = [
+                        'price' => $exception->getMessage(),
+                        'terms' => null,
+                    ];
+                }
+            }
+            $data[] = $services;
         }
-        return redirect()->back()->with('data', $services);
+        return redirect()->back()->with('data', $data);
     }
 }

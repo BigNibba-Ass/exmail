@@ -1,12 +1,20 @@
 <script setup>
 import CustomSelect from "@/Components/CustomSelect.vue";
-import {watch} from "vue";
+import {computed, getCurrentInstance, watch} from "vue";
 
 const props = defineProps({
     comparisonParam: Object
 })
 
 const model = defineModel()
+
+const isDisabled = computed({
+    get() {
+        const instance = getCurrentInstance();
+        console.log(instance.parent);
+        return false
+    }, set(){}
+})
 </script>
 
 <template>
@@ -18,6 +26,7 @@ const model = defineModel()
                 :id="props.comparisonParam.name"
                 v-if="comparisonParam.type === 'input'"
                 v-bind="comparisonParam.attributes"
+                :disabled="isDisabled"
                 v-model="model"
                 class="flex-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"/>
             <custom-select

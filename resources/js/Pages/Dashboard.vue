@@ -12,6 +12,9 @@ import Dropdown from "@/Components/Dropdown.vue";
 import {Link} from "@inertiajs/vue3";
 import {getElementByKey, prettifyNumber, priceValue} from "../Traits.js";
 import CalculationItem from "@/Components/Calculator/CalculationItem.vue";
+import {Switch} from "@headlessui/vue";
+import vSelect from 'vue-select'
+import 'vue-select/dist/vue-select.css';
 
 const form = ref({
     exmail_service_id: null,
@@ -20,13 +23,21 @@ const form = ref({
     nds_included: false,
 })
 
+const topForm = ref({
+    where_from: 1,
+    exmail_sale: null,
+    exmail_markup: null,
+})
+
 const props = defineProps({
     exmail_services: Array,
     companies: Array,
     departure_points: Array,
-    prices: Array
+    prices: Array,
+    csrf_token: String,
 })
 
+const isInTopMode = ref(false)
 
 const modals = ref({
     comparisonParams: false,
@@ -42,18 +53,16 @@ const comparisonParams = [
         name: 'exmail_sale',
         label: 'Скидка ExMail, %',
         type: 'input',
-        dependentlyDisabled: 'exmail_markup',
         attributes: {
             type: 'number',
             min: 0,
             step: 0.01,
-        }
+        },
     },
     {
         name: 'exmail_markup',
         label: 'Маржа ExMail, %',
         type: 'input',
-        dependentlyDisabled: 'exmail_sale',
         attributes: {
             type: 'number',
             min: 0,
@@ -80,18 +89,44 @@ const comparisonParamsHas = (name) => {
 }
 
 const calculate = () => {
-    const formToSend = Object.assign({}, form.value)
+    let formToSend = Object.assign({}, form.value)
+    if (isInTopMode) {
+        formToSend = Object.assign(formToSend, topForm.value)
+    }
     formToSend.selected_comparable_services = []
     for (const companyServices of form.value.selected_comparable_services) {
         if (companyServices) {
             formToSend.selected_comparable_services.push(companyServices[0])
         }
     }
-    router.post(route('calculate'), formToSend, {
-        onError: (err) => {
-            alert(Object.values(err)[0])
-        },
-    })
+    if(isInTopMode) {
+        const form = document.createElement('form');
+        form.method = "POST";
+        form.action = route('calculate-top');
+        formToSend.selected_comparable_services = JSON.stringify(formToSend.selected_comparable_services)
+        for (const key in formToSend) {
+            if (formToSend.hasOwnProperty(key)) {
+                const hiddenField = document.createElement('input');
+                hiddenField.type = 'hidden';
+                hiddenField.name = key;
+                hiddenField.value = formToSend[key];
+                form.appendChild(hiddenField);
+            }
+        }
+        const hiddenField = document.createElement('input');
+        hiddenField.type = 'hidden';
+        hiddenField.name = "_token";
+        hiddenField.value = props.csrf_token;
+        form.appendChild(hiddenField);
+        document.body.appendChild(form);
+        form.submit();
+    } else {
+        router.post(route('calculate'), formToSend, {
+            onError: (err) => {
+                alert(Object.values(err)[0])
+            },
+        })
+    }
 }
 
 const pushComparableService = (company, service) => {
@@ -114,8 +149,9 @@ const removeCalculationItem = (index) => {
     form.value.calculation_items.splice(index, 1); // 2nd parameter means remove one item only
 }
 
-watch(form, value => {
-    // console.log(form)
+watch(selectedComparisonParams, value => {
+    topForm.value.exmail_sale = null
+    topForm.value.exmail_markup = null
 }, {deep: true})
 </script>
 
@@ -135,7 +171,6 @@ watch(form, value => {
                             <div class="flex items-center h-5">
                                 <input :id="param.name + '_checkbox-param'" type="checkbox"
                                        v-model="selectedComparisonParams"
-                                       :disabled="param.dependentlyDisabled ? comparisonParamsHas(param.dependentlyDisabled) : false"
                                        :value="key"
                                        class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"/>
                             </div>
@@ -212,7 +247,7 @@ watch(form, value => {
                             @update:modelValue="pushComparableService(param, $event)"
                             :comparison-hold="getElementByKey(props.companies, param, 'id')"/>
                     </div>
-                    <div class="sm:col-span-6 text-center mt-5">
+                    <div class="sm:col-span-6 text-center mt-5 gap-y-3 flex justify-center flex-col">
                         <div class="flex items-center justify-center gap-x-4">
                             <h2 class="text-xl font-bold">
                                 Параметры для сравнения
@@ -221,24 +256,61 @@ watch(form, value => {
                                 <pencil-square-icon class="w-5 h-5 text-indigo-600"/>
                             </button>
                         </div>
+                        <div class="flex items-center justify-center gap-x-4">
+                            <Switch v-model="isInTopMode"
+                                    class="flex-shrink-0 group relative rounded-full inline-flex items-center justify-center h-5 w-10 cursor-pointer">
+                                <span class="sr-only">Use setting</span>
+                                <span aria-hidden="true"
+                                      class="pointer-events-none absolute bg-white w-full h-full rounded-md"/>
+                                <span aria-hidden="true"
+                                      :class="[isInTopMode ? 'bg-indigo-600' : 'bg-gray-200', 'pointer-events-none absolute h-4 w-9 mx-auto rounded-full transition-colors ease-in-out duration-200']"/>
+                                <span aria-hidden="true"
+                                      :class="[isInTopMode ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none absolute left-0 inline-block h-5 w-5 border border-gray-200 rounded-full bg-white shadow transform ring-0 transition-transform ease-in-out duration-200']"/>
+                            </Switch>
+                            <p class="text-sm font-bold" v-if="isInTopMode">Режим "Топ 100"</p>
+                            <p class="text-sm font-bold" v-else>Обычный режим</p>
+                        </div>
                     </div>
 
-                    <calculation-item
-                        v-for="(item, i) of form.calculation_items"
-                        v-model="form.calculation_items[i]"
-                        @remove="removeCalculationItem(i)"
-                        class="sm:col-span-6"
-                        :departure_points="props.departure_points"
-                        :selected-comparison-params="selectedComparisonParams"
-                        :comparison-params="comparisonParams"
-                    />
+                    <template v-if="!isInTopMode">
+                        <calculation-item
+                            v-for="(item, i) of form.calculation_items"
+                            v-model="form.calculation_items[i]"
+                            @remove="removeCalculationItem(i)"
+                            class="sm:col-span-6"
+                            :departure_points="props.departure_points"
+                            :selected-comparison-params="selectedComparisonParams"
+                            :comparison-params="comparisonParams"
+                        />
 
 
-                    <div class="sm:col-span-1 flex items-center">
-                        <button type="button" class="mt-5" @click.prevent="addCalculationItem">
-                            <plus-circle-icon class="w-8 h-8 text-indigo-600"/>
-                        </button>
-                    </div>
+                        <div class="sm:col-span-1 flex items-center">
+                            <button type="button" class="mt-5" @click.prevent="addCalculationItem">
+                                <plus-circle-icon class="w-8 h-8 text-indigo-600"/>
+                            </button>
+                        </div>
+                    </template>
+
+                    <template v-else>
+                        <div class="sm:col-span-1">
+                            <label for="where-from" class="block text-sm font-medium text-gray-700">
+                                Откуда </label>
+                            <div class="mt-1">
+                                <v-select
+                                    id="where-from"
+                                    v-model="topForm.where_from"
+                                    :reduce="elem => elem.value" label="text"
+                                    :clearable="false"
+                                    :options="props.departure_points"/>
+                            </div>
+                        </div>
+                        <div class="sm:col-span-1"
+                             v-for="param of selectedComparisonParams">
+                            <comparison-param-field
+                                v-model="topForm[comparisonParams[param].name]"
+                                :comparison-param="comparisonParams[param]"/>
+                        </div>
+                    </template>
 
                     <div class="sm:col-span-6">
                         <label for="nds_included" class="font-medium text-gray-700">
@@ -252,161 +324,163 @@ watch(form, value => {
                     <div class="sm:col-span-6">
                         <button type="submit"
                                 class="ms-auto inline-flex items-center p-3 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
-                            Рассчитать
+                            {{ isInTopMode ? 'Выгрузить' : 'Рассчитать' }}
                         </button>
                     </div>
                 </div>
-                <div class="sm:col-span-6 mt-5">
-                    <div class="flex flex-col">
-                        <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                            <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
-                                <div
-                                    class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-                                    <table class="min-w-full divide-y divide-gray-200">
-                                        <thead class="bg-gray-50">
-                                        <tr>
-                                            <th rowspan="2" class="relative px-6 py-3">
-                                                Откуда
-                                            </th>
-                                            <th rowspan="2" class="relative px-6 py-3">
-                                                Куда
-                                            </th>
-                                            <th rowspan="2" class="relative px-6 py-3">
-                                                Вес
-                                            </th>
-                                            <th :colspan="1 + selectedComparableHolds.length * 2"
-                                                class="relative px-6 py-3 bg-green-200">
-                                                Тариф
-                                            </th>
-                                            <th v-if="comparisonParamsHas('terms')"
-                                                :colspan="1 + selectedComparableHolds.length"
-                                                class="relative px-6 py-3 bg-blue-200">
-                                                Сроки
-                                            </th>
-                                            <th v-if="comparisonParamsHas('exmail_markup')" rowspan="1"
-                                                class="relative px-6 py-3 bg-blue-500">
-                                                Маржа
-                                            </th>
-                                        </tr>
-                                        <tr>
-                                            <th rowspan="1" class="relative px-6 py-3 bg-green-200">
-                                                ExMail
-                                            </th>
-                                            <template v-for="company of selectedComparableHolds">
-                                                <th rowspan="1" class="relative px-6 py-3 bg-green-200">
-                                                    {{ getElementByKey(props.companies, company, 'id').name }}
+                <template v-if="!isInTopMode">
+                    <div class="sm:col-span-6 mt-5">
+                        <div class="flex flex-col">
+                            <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                                <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
+                                    <div
+                                        class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
+                                        <table class="min-w-full divide-y divide-gray-200">
+                                            <thead class="bg-gray-50">
+                                            <tr>
+                                                <th rowspan="2" class="relative px-6 py-3">
+                                                    Откуда
                                                 </th>
-                                                <th rowspan="1" class="relative px-6 py-3 bg-green-200">
-                                                    Разница, %
+                                                <th rowspan="2" class="relative px-6 py-3">
+                                                    Куда
                                                 </th>
-                                            </template>
-                                            <template v-if="comparisonParamsHas('terms')">
-                                                <th rowspan="1"
+                                                <th rowspan="2" class="relative px-6 py-3">
+                                                    Вес
+                                                </th>
+                                                <th :colspan="1 + selectedComparableHolds.length * 2"
+                                                    class="relative px-6 py-3 bg-green-200">
+                                                    Тариф
+                                                </th>
+                                                <th v-if="comparisonParamsHas('terms')"
+                                                    :colspan="1 + selectedComparableHolds.length"
                                                     class="relative px-6 py-3 bg-blue-200">
+                                                    Сроки
+                                                </th>
+                                                <th v-if="comparisonParamsHas('exmail_markup')" rowspan="1"
+                                                    class="relative px-6 py-3 bg-blue-500">
+                                                    Маржа
+                                                </th>
+                                            </tr>
+                                            <tr>
+                                                <th rowspan="1" class="relative px-6 py-3 bg-green-200">
                                                     ExMail
                                                 </th>
-                                                <td v-for="company of selectedComparableHolds"
-                                                    class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
-                                                    {{ getElementByKey(props.companies, company, 'id').name }}
-                                                </td>
-                                            </template>
-                                            <th rowspan="1" v-if="comparisonParamsHas('exmail_markup')"
-                                                class="relative px-6 py-3 bg-blue-500">
-                                                ExMail
-                                            </th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        <tr class="bg-white" v-for="item of $page.props.flash.data">
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                                {{
-                                                    item.misc.where_from
-                                                }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                                {{
-                                                    item.misc.where_to
-                                                }}
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                                                {{ item.misc.weight }} кг
-                                            </td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                Цена: {{
-                                                    priceValue(item?.exmail?.price) || 'Не рассчитано'
-                                                }}
-                                                <template v-if="comparisonParamsHas('exmail_sale')">
-                                                    <br/>
-                                                    Цена со скидкой: {{
-                                                        priceValue(item?.exmail?.price_with_sale) || 'Не рассчитано'
-                                                    }}
+                                                <template v-for="company of selectedComparableHolds">
+                                                    <th rowspan="1" class="relative px-6 py-3 bg-green-200">
+                                                        {{ getElementByKey(props.companies, company, 'id').name }}
+                                                    </th>
+                                                    <th rowspan="1" class="relative px-6 py-3 bg-green-200">
+                                                        Разница, %
+                                                    </th>
                                                 </template>
-                                                <template v-if="comparisonParamsHas('exmail_markup')">
-                                                    <br/>
-                                                    Цена при марже: {{
-                                                        priceValue(item?.exmail?.price_with_markup) || 'Не рассчитано'
-                                                    }}
+                                                <template v-if="comparisonParamsHas('terms')">
+                                                    <th rowspan="1"
+                                                        class="relative px-6 py-3 bg-blue-200">
+                                                        ExMail
+                                                    </th>
+                                                    <td v-for="company of selectedComparableHolds"
+                                                        class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
+                                                        {{ getElementByKey(props.companies, company, 'id').name }}
+                                                    </td>
                                                 </template>
-                                            </td>
-                                            <template v-for="company of selectedComparableHolds">
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
+                                                <th rowspan="1" v-if="comparisonParamsHas('exmail_markup')"
+                                                    class="relative px-6 py-3 bg-blue-500">
+                                                    ExMail
+                                                </th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr class="bg-white" v-for="item of $page.props.flash.data">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                                     {{
-                                                        priceValue(item?.[company]?.price) || 'Не рассчитано'
+                                                        item.misc.where_from
                                                     }}
                                                 </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                                    {{
+                                                        item.misc.where_to
+                                                    }}
+                                                </td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                                    {{ item.misc.weight }} кг
+                                                </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                    Цены: {{
-                                                        prettifyNumber(((item?.exmail?.price -
-                                                                item?.[company]?.price) /
-                                                            item?.exmail?.price) * 100)
-                                                    }} %
+                                                    Цена: {{
+                                                        priceValue(item?.exmail?.price) || 'Не рассчитано'
+                                                    }}
                                                     <template v-if="comparisonParamsHas('exmail_sale')">
                                                         <br/>
-                                                        Цены со скидкой: {{
-                                                            prettifyNumber(((item?.exmail?.price_with_sale -
-                                                                    item?.[company]?.price) /
-                                                                item?.exmail?.price_with_sale) * 100)
-                                                        }} %
+                                                        Цена со скидкой: {{
+                                                            priceValue(item?.exmail?.price_with_sale) || 'Не рассчитано'
+                                                        }}
                                                     </template>
                                                     <template v-if="comparisonParamsHas('exmail_markup')">
                                                         <br/>
-                                                        Цены с маржой: {{
-                                                            prettifyNumber(((item?.exmail?.price_with_markup -
-                                                                    item?.[company]?.price) /
-                                                                item?.exmail?.price_with_markup) * 100)
-                                                        }} %
+                                                        Цена при марже: {{
+                                                            priceValue(item?.exmail?.price_with_markup) || 'Не рассчитано'
+                                                        }}
                                                     </template>
                                                 </td>
-                                            </template>
-                                            <template v-if="comparisonParamsHas('terms')">
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
+                                                <template v-for="company of selectedComparableHolds">
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
+                                                        {{
+                                                            priceValue(item?.[company]?.price) || 'Не рассчитано'
+                                                        }}
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
+                                                        Цены: {{
+                                                            prettifyNumber(((item?.exmail?.price -
+                                                                    item?.[company]?.price) /
+                                                                item?.exmail?.price) * 100)
+                                                        }} %
+                                                        <template v-if="comparisonParamsHas('exmail_sale')">
+                                                            <br/>
+                                                            Цены со скидкой: {{
+                                                                prettifyNumber(((item?.exmail?.price_with_sale -
+                                                                        item?.[company]?.price) /
+                                                                    item?.exmail?.price_with_sale) * 100)
+                                                            }} %
+                                                        </template>
+                                                        <template v-if="comparisonParamsHas('exmail_markup')">
+                                                            <br/>
+                                                            Цены с маржой: {{
+                                                                prettifyNumber(((item?.exmail?.price_with_markup -
+                                                                        item?.[company]?.price) /
+                                                                    item?.exmail?.price_with_markup) * 100)
+                                                            }} %
+                                                        </template>
+                                                    </td>
+                                                </template>
+                                                <template v-if="comparisonParamsHas('terms')">
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
+                                                        {{
+                                                            item?.exmail?.terms ? item?.exmail?.terms + " д." : 'Не указано'
+                                                        }}
+                                                    </td>
+                                                    <td v-for="company of selectedComparableHolds"
+                                                        class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
+                                                        {{
+                                                            item?.[company]?.terms ? item?.[company]?.terms + " д." : 'Не указано'
+                                                        }}
+                                                    </td>
+                                                </template>
+                                                <td v-if="comparisonParamsHas('exmail_markup')"
+                                                    class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-500">
                                                     {{
-                                                        item?.exmail?.terms ? item?.exmail?.terms + " д." : 'Не указано'
+                                                        prettifyNumber(item?.exmail?.markup) + ' %' || 'Невозможно расчитать'
                                                     }}
                                                 </td>
-                                                <td v-for="company of selectedComparableHolds"
-                                                    class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-200">
-                                                    {{
-                                                        item?.[company]?.terms ? item?.[company]?.terms + " д." : 'Не указано'
-                                                    }}
-                                                </td>
-                                            </template>
-                                            <td v-if="comparisonParamsHas('exmail_markup')"
-                                                class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-blue-500">
-                                                {{
-                                                    prettifyNumber(item?.exmail?.markup) + ' %' || 'Невозможно расчитать'
-                                                }}
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
+                </template>
             </form>
-            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 mt-5">
+            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6 mt-5" v-if="!isInTopMode">
                 <div class="sm:col-span-3">
                     <button type="button"
                             class="ms-auto inline-flex w-full text-center justify-center items-center p-3 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">

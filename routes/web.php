@@ -17,6 +17,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/calculate', [DashboardController::class, 'calculate'])->name('calculate');
+    Route::post('/calculate-top', [DashboardController::class, 'calculateTop'])->name('calculate-top');
 
     // TODO: to resource
     Route::get('/offer-test', function () {

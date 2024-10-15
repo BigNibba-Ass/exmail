@@ -81,6 +81,20 @@ class ServiceCalculator
         return $priceObj->price;
     }
 
+    public function getPricePerExtra()
+    {
+        $priceQuery = $this->comparableService
+            ->areaPrices()
+            ->limit(1)
+            ->where(['area_number' => $this->area->area_number])
+            ->first();
+        if (!$priceQuery->exists()) {
+            throw new ServiceCalculatorException("Не указан тариф (" . $this->getCompanyName() . ")");
+        }
+        $priceObj = $priceQuery->first();
+        return $priceObj->price_per_extra;
+    }
+
     /**
      * @return Service
      */

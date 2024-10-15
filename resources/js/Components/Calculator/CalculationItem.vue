@@ -26,6 +26,15 @@ watch(() => props.selectedComparisonParams, value => {
     item.value.exmail_sale = null
     item.value.exmail_markup = null
 }, {deep: true})
+
+watch(item, value => {
+    if(value.exmail_sale && value.exmail_markup) {
+        setTimeout(() => {
+            item.value.exmail_sale = null
+            item.value.exmail_markup = null
+        }, 50)
+    }
+}, {deep: true})
 </script>
 
 <template>

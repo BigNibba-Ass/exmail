@@ -487,10 +487,10 @@ watch(form, value => {
                                         <tr>
                                             <th>Откуда</th>
                                             <th>Куда</th>
-                                            <th>Вес 0.24</th>
-                                            <th>Вес 0.49</th>
-                                            <th>Вес 0.99</th>
-                                            <th>Доп.</th>
+                                            <th>Вес до 0.25</th>
+                                            <th>Вес до 0.5</th>
+                                            <th>Вес до 1</th>
+                                            <th>Каждый последующая</th>
                                         </tr>
                                         <tr v-for="top in $page.props.flash.data?.top">
                                             <td>{{top['where_from']}}</td>

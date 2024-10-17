@@ -60,14 +60,20 @@ class DashboardController extends Controller
                 $exmailPrice = $exmailCalculator->getPrice($item['weight'], $request->get('nds_included'));
 
                 $markup = null;
+
                 $initialService = Service::firstWhere(['name' => Service::$EXMAIL_INITIAL_SERVICE_NAME]);
-                if ($initialService) {
-                    $exmailInitialCalculator = new ServiceCalculator(
-                        $initialService,
-                        $whereFrom,
-                        $whereTo,
-                    );
-                    $markup = (($exmailPrice - $exmailInitialCalculator->getPrice($item['weight'])) / $exmailPrice) * 100;
+                $exmailInitialCalculator = null;
+                if($initialService) {
+                    try {
+                        $exmailInitialCalculator = new ServiceCalculator(
+                            $initialService,
+                            $whereFrom,
+                            $whereTo,
+                        );
+                        $markup = (($exmailPrice - $exmailInitialCalculator->getPrice($item['weight'])) / $exmailPrice) * 100;
+                    } catch (ServiceCalculatorException) {
+
+                    }
                 }
 
                 $services['exmail'] = [
@@ -77,7 +83,7 @@ class DashboardController extends Controller
                 ];
                 if ($sale = $item['exmail_sale']) {
                     $services['exmail']['price_with_sale'] = $exmailPrice * ((100 - $sale) / 100);
-                } elseif ($item['exmail_markup'] && $initialService) {
+                } elseif ($item['exmail_markup'] && $markup && $exmailInitialCalculator) {
                     $services['exmail']['price_with_markup'] = ($exmailInitialCalculator->getPrice($item['weight']) / (1 - ($item['exmail_markup'] / 100)));
                 }
             } catch (ServiceCalculatorException $exception) {
@@ -130,16 +136,24 @@ class DashboardController extends Controller
                         );
                         $exmailPrice = $exmailCalculator->getPrice($weight, $request->get('nds_included'));
                         $initialService = Service::firstWhere(['name' => Service::$EXMAIL_INITIAL_SERVICE_NAME]);
-                        $exmailInitialCalculator = new ServiceCalculator(
-                                $initialService,
-                                $whereFrom,
-                                $whereTo,
-                            );
+                        $initialPrice = null;
+                        if($initialService) {
+                          try {
+                              $exmailInitialCalculator = new ServiceCalculator(
+                                  $initialService,
+                                  $whereFrom,
+                                  $whereTo,
+                              );
+                              $initialPrice = $exmailInitialCalculator->getPrice($weight);
+                          } catch (ServiceCalculatorException) {
+
+                          }
+                        }
                         $price = $exmailPrice;
                         if ($sale = $request->get('top_exmail_sale')) {
-                            $price = $exmailPrice * ((100 - $sale) / 100);
-                        } elseif ($request->get('top_exmail_markup') && $initialService) {
-                            $price = ($exmailInitialCalculator->getPrice($weight) / (1 - ($request->get('top_exmail_markup') / 100)));
+                            $price = round($exmailPrice * ((100 - $sale) / 100));
+                        } elseif ($request->get('top_exmail_markup') && $initialPrice) {
+                            $price = round(($initialPrice / (1 - ($request->get('top_exmail_markup') / 100))));
                         }
                         $top[$key]['weight_'.$weight] = $price;
                         $top[$key]['additional_weight'] = $exmailCalculator->getPricePerExtra();

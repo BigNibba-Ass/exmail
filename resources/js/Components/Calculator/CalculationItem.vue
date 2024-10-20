@@ -27,12 +27,21 @@ watch(() => props.selectedComparisonParams, value => {
     item.value.exmail_markup = null
 }, {deep: true})
 
-watch(item, value => {
-    if(value.exmail_sale && value.exmail_markup) {
+watch(() => item.value['exmail_sale'], value => {
+    if (item.value['exmail_sale'] !== null) {
         setTimeout(() => {
-            item.value.exmail_sale = null
-            item.value.exmail_markup = null
+            item.value['exmail_markup'] = null
         }, 50)
+        return
+    }
+}, {deep: true})
+
+watch(() => item.value['exmail_markup'], value => {
+    if ( item.value['exmail_markup'] !== null) {
+        setTimeout(() => {
+            item.value['exmail_sale'] = null
+        }, 50)
+        return
     }
 }, {deep: true})
 </script>

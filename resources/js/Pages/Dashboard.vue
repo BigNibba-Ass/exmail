@@ -15,6 +15,10 @@ import CalculationItem from "@/Components/Calculator/CalculationItem.vue";
 import {Switch} from "@headlessui/vue";
 import vSelect from 'vue-select'
 import 'vue-select/dist/vue-select.css';
+import {utils, write} from 'xlsx'
+import {
+    saveAs
+} from 'file-saver'
 
 const form = ref({
     exmail_service_id: null,
@@ -119,32 +123,43 @@ const removeCalculationItem = (index) => {
     form.value.calculation_items.splice(index, 1); // 2nd parameter means remove one item only
 }
 
+const page = usePage()
+
 const exportTable = () => {
-    const tableToExcel = (function () {
-        const uri = 'data:application/vnd.ms-excel;base64,'
-            ,
-            template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--><meta http-equiv="content-type" content="text/plain; charset=UTF-8"/></head><body><table>{table}</table></body></html>'
-            , base64 = function (s) {
-                return window.btoa(unescape(encodeURIComponent(s)))
-            }
-            , format = function (s, c) {
-                return s.replace(/{(\w+)}/g, function (m, p) {
-                    return c[p];
-                })
-            };
-        return function (table, name) {
-            if (!table.nodeType) table = document.getElementById(table)
-            const ctx = {worksheet: name || 'Worksheet', table: table.innerHTML};
-            window.location.href = uri + base64(format(template, ctx))
-        }
-    })();
-    tableToExcel('main-table', 'Основная')
-    const page = usePage()
-    if(page.props.flash.data?.top?.length) {
-        setTimeout(() => {
-            tableToExcel('top-table', 'Топ')
-        }, 2000)
+    let wb = {
+        Sheets: [
+        ],
+        SheetNames: [],
+        Props: {
+            raw: true
+        },
+
     }
+    utils.book_append_sheet(wb, utils.table_to_sheet(document.querySelector('#main-table'), {
+        raw: true
+    }), 'Основной Расчет')
+    if(page.props.flash.data?.top?.length) {
+        utils.book_append_sheet(wb, utils.table_to_sheet(document.querySelector('#top-table'), {
+            raw: true
+        }), 'Топ 100')
+    }
+    let wbout = write(wb, {
+        bookType: 'xlsx',
+        bookSST: true,
+        type: 'binary'
+    })
+
+    function s2ab(s) {
+
+        let buf = new ArrayBuffer(s.length)
+        let view = new Uint8Array(buf)
+        for (let i = 0; i != s.length; i++) view[i] = s.charCodeAt(i) & 0xFF
+        return buf
+    }
+
+    saveAs(new Blob([s2ab(wbout)], {
+        type: "text/plain;charset=utf-8"
+    }), 'calculations.xlsx')
 }
 
 watch(selectedComparisonParams, value => {
@@ -152,12 +167,21 @@ watch(selectedComparisonParams, value => {
     form.value.top_exmail_markup = null
 }, {deep: true})
 
-watch(form, value => {
-    if(value.top_exmail_sale && value.top_exmail_markup) {
+watch(() => form.value.top_exmail_sale, value => {
+    if (form.value.top_exmail_sale !== null) {
         setTimeout(() => {
-            form.value.top_exmail_sale = null
             form.value.top_exmail_markup = null
         }, 50)
+        return
+    }
+}, {deep: true})
+
+watch(() => form.value.top_exmail_markup, value => {
+    if ( form.value.top_exmail_markup !== null) {
+        setTimeout(() => {
+            form.value.top_exmail_sale = null
+        }, 50)
+        return
     }
 }, {deep: true})
 //
@@ -267,20 +291,6 @@ watch(form, value => {
                                 <pencil-square-icon class="w-5 h-5 text-indigo-600"/>
                             </button>
                         </div>
-                        <div class="flex items-center justify-center gap-x-4">
-                            <Switch v-model="form.is_in_top_mode"
-                                    class="flex-shrink-0 group relative rounded-full inline-flex items-center justify-center h-5 w-10 cursor-pointer">
-                                <span class="sr-only">Use setting</span>
-                                <span aria-hidden="true"
-                                      class="pointer-events-none absolute bg-white w-full h-full rounded-md"/>
-                                <span aria-hidden="true"
-                                      :class="[form.is_in_top_mode ? 'bg-indigo-600' : 'bg-gray-200', 'pointer-events-none absolute h-4 w-9 mx-auto rounded-full transition-colors ease-in-out duration-200']"/>
-                                <span aria-hidden="true"
-                                      :class="[form.is_in_top_mode ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none absolute left-0 inline-block h-5 w-5 border border-gray-200 rounded-full bg-white shadow transform ring-0 transition-transform ease-in-out duration-200']"/>
-                            </Switch>
-                            <p class="text-sm font-bold" v-if="form.is_in_top_mode">Режим с "Топ 100"</p>
-                            <p class="text-sm font-bold" v-else>Обычный режим</p>
-                        </div>
                     </div>
 
                     <calculation-item
@@ -300,6 +310,20 @@ watch(form, value => {
                         </button>
                     </div>
 
+                    <div class="flex items-center justify-center gap-x-4 sm:col-span-6">
+                        <Switch v-model="form.is_in_top_mode"
+                                class="flex-shrink-0 group relative rounded-full inline-flex items-center justify-center h-5 w-10 cursor-pointer">
+                            <span class="sr-only">Use setting</span>
+                            <span aria-hidden="true"
+                                  class="pointer-events-none absolute bg-white w-full h-full rounded-md"/>
+                            <span aria-hidden="true"
+                                  :class="[form.is_in_top_mode ? 'bg-indigo-600' : 'bg-gray-200', 'pointer-events-none absolute h-4 w-9 mx-auto rounded-full transition-colors ease-in-out duration-200']"/>
+                            <span aria-hidden="true"
+                                  :class="[form.is_in_top_mode ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none absolute left-0 inline-block h-5 w-5 border border-gray-200 rounded-full bg-white shadow transform ring-0 transition-transform ease-in-out duration-200']"/>
+                        </Switch>
+                        <p class="text-sm font-bold" v-if="form.is_in_top_mode">Вкл. "Топ 100"</p>
+                        <p class="text-sm font-bold" v-else>Выкл. "Топ 100"</p>
+                    </div>
 
                     <div class="sm:col-span-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6"
                          v-if="form.is_in_top_mode">
@@ -483,22 +507,23 @@ watch(form, value => {
                                         </tr>
                                         </tbody>
                                     </table>
-                                    <table hidden id="top-table" v-if="$page.props.flash.data?.top?.length">
+                                    <table hidden id="top-table">
                                         <tr>
                                             <th>Откуда</th>
                                             <th>Куда</th>
                                             <th>Вес до 0.25</th>
                                             <th>Вес до 0.5</th>
                                             <th>Вес до 1</th>
-                                            <th>Каждый последующая</th>
+                                            <th>Каждый последующий</th>
                                         </tr>
-                                        <tr v-for="top in $page.props.flash.data?.top">
-                                            <td>{{top['where_from']}}</td>
-                                            <td>{{top['where_to']}}</td>
-                                            <td>{{top['weight_0.24']}}</td>
-                                            <td>{{top['weight_0.49']}}</td>
-                                            <td>{{top['weight_0.99']}}</td>
-                                            <td>{{top['additional_weight']}}</td>
+                                        <tr v-if="$page.props.flash.data?.top?.length"
+                                            v-for="top in $page.props.flash.data?.top">
+                                            <td>{{ top['where_from'] }}</td>
+                                            <td>{{ top['where_to'] }}</td>
+                                            <td>{{ top['weight_0.24'] }}</td>
+                                            <td>{{ top['weight_0.49'] }}</td>
+                                            <td>{{ top['weight_0.99'] }}</td>
+                                            <td>{{ top['additional_weight'] }}</td>
                                         </tr>
                                     </table>
                                 </div>

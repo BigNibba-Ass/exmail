@@ -151,11 +151,11 @@ class DashboardController extends Controller
                         }
                         $price = $exmailPrice;
                         if ($sale = $request->get('top_exmail_sale')) {
-                            $price = round($exmailPrice * ((100 - $sale) / 100));
+                            $price = $exmailPrice * ((100 - $sale) / 100);
                         } elseif ($request->get('top_exmail_markup') && $initialPrice) {
-                            $price = round(($initialPrice / (1 - ($request->get('top_exmail_markup') / 100))));
+                            $price = ($initialPrice / (1 - ($request->get('top_exmail_markup') / 100)));
                         }
-                        $top[$key]['weight_'.$weight] = $price;
+                        $top[$key]['weight_'.$weight] = (int) round($price);
                         $top[$key]['additional_weight'] = $exmailCalculator->getPricePerExtra();
                     } catch (ServiceCalculatorException $exception) {
                         continue;

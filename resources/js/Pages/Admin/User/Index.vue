@@ -34,6 +34,8 @@ const generatePassword = () => {
 const userForm = ref({
     name: '',
     email: '',
+    city: '',
+    phone_number: '',
     password: '',
     password_confirmation: '',
 })
@@ -111,6 +113,24 @@ watch(userSearchQuery, (val) => {
                             </div>
                         </div>
                         <div>
+                            <label for="city" class="block text-sm font-medium text-gray-700">
+                                Город </label>
+                            <div class="mt-1">
+                                <input type="text" id="city"
+                                       v-model="userForm.city"
+                                       class="flex-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"/>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="phone_number" class="block text-sm font-medium text-gray-700">
+                                Телефон </label>
+                            <div class="mt-1">
+                                <input type="text" id="phone_number"
+                                       v-model="userForm.phone_number"
+                                       class="flex-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"/>
+                            </div>
+                        </div>
+                        <div>
                             <label for="password" class="block flex items-center text-sm font-medium text-gray-700">
                                 Пароль
                                 <button
@@ -182,6 +202,12 @@ watch(userSearchQuery, (val) => {
                                     Администратор
                                 </th>
                                 <th class="relative px-6 py-3">
+                                    Город
+                                </th>
+                                <th class="relative px-6 py-3">
+                                    Телефон
+                                </th>
+                                <th class="relative px-6 py-3">
                                     Доступ
                                 </th>
                                 <th class="relative px-6 py-3">
@@ -199,6 +225,12 @@ watch(userSearchQuery, (val) => {
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                     {{ user.is_admin ? 'Да' : 'Нет' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                    {{ user.city }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                                    {{ user.phone_number }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
                                     <div class="mt-5 w-full flex justify-center">

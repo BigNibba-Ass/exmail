@@ -127,8 +127,7 @@ const page = usePage()
 
 const exportTable = () => {
     let wb = {
-        Sheets: [
-        ],
+        Sheets: [],
         SheetNames: [],
         Props: {
             raw: true
@@ -138,7 +137,7 @@ const exportTable = () => {
     utils.book_append_sheet(wb, utils.table_to_sheet(document.querySelector('#main-table'), {
         raw: true
     }), 'Основной Расчет')
-    if(page.props.flash.data?.top?.length) {
+    if (page.props.flash.data?.top?.length) {
         utils.book_append_sheet(wb, utils.table_to_sheet(document.querySelector('#top-table'), {
             raw: true
         }), 'Топ 100')
@@ -177,17 +176,19 @@ watch(() => form.value.top_exmail_sale, value => {
 }, {deep: true})
 
 watch(() => form.value.top_exmail_markup, value => {
-    if ( form.value.top_exmail_markup !== null) {
+    if (form.value.top_exmail_markup !== null) {
         setTimeout(() => {
             form.value.top_exmail_sale = null
         }, 50)
         return
     }
 }, {deep: true})
-//
-// watch(() => form.top_exmail_markup, value => {
-//     form.value.top_exmail_sale
-// }, {deep: true})
+
+const storeOffer = () => {
+    router.post(route('offers.store'), {
+        data: page.props.flash,
+    })
+}
 </script>
 
 <template>
@@ -439,21 +440,9 @@ watch(() => form.value.top_exmail_markup, value => {
                                                 {{ item.misc.weight }} кг
                                             </td>
                                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                Цена: {{
+                                                {{
                                                     priceValue(item?.exmail?.price) || 'Не рассчитано'
                                                 }}
-                                                <template v-if="comparisonParamsHas('exmail_sale')">
-                                                    <br/>
-                                                    Цена со скидкой: {{
-                                                        priceValue(item?.exmail?.price_with_sale) || 'Не рассчитано'
-                                                    }}
-                                                </template>
-                                                <template v-if="comparisonParamsHas('exmail_markup')">
-                                                    <br/>
-                                                    Цена при марже: {{
-                                                        priceValue(item?.exmail?.price_with_markup) || 'Не рассчитано'
-                                                    }}
-                                                </template>
                                             </td>
                                             <template v-for="company of selectedComparableHolds">
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
@@ -462,27 +451,9 @@ watch(() => form.value.top_exmail_markup, value => {
                                                     }}
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                    Цены: {{
-                                                        prettifyNumber(((item?.exmail?.price -
-                                                                item?.[company]?.price) /
-                                                            item?.exmail?.price) * 100)
-                                                    }} %
-                                                    <template v-if="comparisonParamsHas('exmail_sale')">
-                                                        <br/>
-                                                        Цены со скидкой: {{
-                                                            prettifyNumber(((item?.exmail?.price_with_sale -
-                                                                    item?.[company]?.price) /
-                                                                item?.exmail?.price_with_sale) * 100)
-                                                        }} %
-                                                    </template>
-                                                    <template v-if="comparisonParamsHas('exmail_markup')">
-                                                        <br/>
-                                                        Цены с маржой: {{
-                                                            prettifyNumber(((item?.exmail?.price_with_markup -
-                                                                    item?.[company]?.price) /
-                                                                item?.exmail?.price_with_markup) * 100)
-                                                        }} %
-                                                    </template>
+                                                {{prettifyNumber(((item?.exmail?.price -
+                                                        item?.[company]?.price) /
+                                                    item?.exmail?.price) * 100)}}
                                                 </td>
                                             </template>
                                             <template v-if="comparisonParamsHas('terms')">
@@ -541,11 +512,11 @@ watch(() => form.value.top_exmail_markup, value => {
                     </button>
                 </div>
                 <div class="sm:col-span-3">
-                    <Link type="button"
-                          :href="route('offer-test')"
-                          class="ms-auto inline-flex w-full text-center justify-center items-center p-3 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
+                    <button type="button"
+                            @click.prevent="storeOffer"
+                            class="ms-auto inline-flex w-full text-center justify-center items-center p-3 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
                         Создать КП
-                    </Link>
+                    </button>
                 </div>
             </div>
         </div>

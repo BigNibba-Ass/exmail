@@ -13,6 +13,8 @@ class UserSeeder extends Seeder
             'name' => 'admin',
             'email' => 'admin@test.com',
             'is_admin' => 1,
+            'city' => 'Los Angeles',
+            'phone_number' => '+1 (111) 111-1111',
             'password' => \Hash::make('adminPassword'),
         ]);
     }

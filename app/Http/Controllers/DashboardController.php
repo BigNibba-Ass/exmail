@@ -82,9 +82,9 @@ class DashboardController extends Controller
                     'markup' => $markup,
                 ];
                 if ($sale = $item['exmail_sale']) {
-                    $services['exmail']['price_with_sale'] = $exmailPrice * ((100 - $sale) / 100);
+                    $services['exmail']['price'] = $exmailPrice * ((100 - $sale) / 100);
                 } elseif ($item['exmail_markup'] && $markup && $exmailInitialCalculator) {
-                    $services['exmail']['price_with_markup'] = ($exmailInitialCalculator->getPrice($item['weight']) / (1 - ($item['exmail_markup'] / 100)));
+                    $services['exmail']['price'] = ($exmailInitialCalculator->getPrice($item['weight']) / (1 - ($item['exmail_markup'] / 100)));
                 }
             } catch (ServiceCalculatorException $exception) {
                 return redirect()->back()->withErrors(['calculation' => $exception->getMessage()]);

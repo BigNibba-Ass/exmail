@@ -71,6 +71,10 @@ class DashboardController extends Controller
                             $whereTo,
                         );
                         $markup = (($exmailPrice - $exmailInitialCalculator->getPrice($item['weight'])) / $exmailPrice) * 100;
+                        if ($item['exmail_sale']) {
+                            $localPrice = $exmailPrice * ((100 - $item['exmail_sale']) / 100);
+                            $markup = (($localPrice - $exmailInitialCalculator->getPrice($item['weight'])) / $localPrice) * 100;
+                        }
                     } catch (ServiceCalculatorException) {
 
                     }

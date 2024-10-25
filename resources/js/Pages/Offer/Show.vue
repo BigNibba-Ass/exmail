@@ -14,7 +14,7 @@ const props = defineProps({
 
 const download = async () => {
     const canvases = []
-    for (const elem of document.querySelectorAll("[id*='pf']")) {
+    for (let elem of document.querySelectorAll("[id*='pf']")) {
         const canvas = await html2canvas(elem, {
             scale: 4,
         })
@@ -22,9 +22,9 @@ const download = async () => {
     }
     let pdf = new jsPDF('p', 'px', [1788, 2528]);
     let i = 0
-    for(const elem of canvases) {
+    for (const elem of canvases) {
         let imgData = elem.toDataURL("image/jpeg", 1.0);
-        pdf.addImage(imgData, 'JPEG', 0, 0, 1788, 2528, "alias"+i)
+        pdf.addImage(imgData, 'JPEG', 0, 0, 1788, 2528, "alias" + i)
         pdf.addPage()
         i++
     }

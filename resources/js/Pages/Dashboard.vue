@@ -370,7 +370,7 @@ const storeOffer = () => {
                             <div class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8">
                                 <div
                                     class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg">
-                                    <table class="min-w-full divide-y divide-gray-200" id="main-table">
+                                    <table class="min-w-full divide-y divide-gray-200">
                                         <thead class="bg-gray-50">
                                         <tr>
                                             <th rowspan="2" class="relative px-6 py-3">
@@ -451,9 +451,11 @@ const storeOffer = () => {
                                                     }}
                                                 </td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center bg-green-200">
-                                                {{prettifyNumber(((item?.exmail?.price -
-                                                        item?.[company]?.price) /
-                                                    item?.exmail?.price) * 100)}}
+                                                    {{
+                                                        prettifyNumber(((item?.exmail?.price -
+                                                                item?.[company]?.price) /
+                                                            item?.exmail?.price) * 100)
+                                                    }}
                                                 </td>
                                             </template>
                                             <template v-if="comparisonParamsHas('terms')">
@@ -478,6 +480,27 @@ const storeOffer = () => {
                                         </tr>
                                         </tbody>
                                     </table>
+                                    <table hidden id="main-table">
+                                        <tr>
+                                            <th>Откуда</th>
+                                            <th>Куда</th>
+                                            <th>Вес</th>
+                                            <th>Тариф</th>
+                                            <th v-if="comparisonParamsHas('terms')">Сроки</th>
+                                        </tr>
+                                        <tr v-if="$page.props.flash.data?.data?.length"
+                                            v-for="item of $page.props.flash.data?.data">
+                                            <td>{{ item.misc.where_from }}</td>
+                                            <td>{{ item.misc.where_to }}</td>
+                                            <td>{{ item.misc.weight }} кг</td>
+                                            <td>{{ priceValue(item?.exmail?.price) }}</td>
+                                            <td v-if="comparisonParamsHas('terms')">
+                                                {{
+                                                    item?.exmail?.terms ? item?.exmail?.terms + " д." : 'Не указано'
+                                                }}
+                                            </td>
+                                        </tr>
+                                    </table>
                                     <table hidden id="top-table">
                                         <tr>
                                             <th>Откуда</th>
@@ -487,15 +510,16 @@ const storeOffer = () => {
                                             <th>Вес до 1</th>
                                             <th>Каждый последующий</th>
                                         </tr>
-                                        <tr v-if="$page.props.flash.data?.top?.length"
-                                            v-for="top in $page.props.flash.data?.top">
-                                            <td>{{ top['where_from'] }}</td>
-                                            <td>{{ top['where_to'] }}</td>
-                                            <td>{{ top['weight_0.24'] }}</td>
-                                            <td>{{ top['weight_0.49'] }}</td>
-                                            <td>{{ top['weight_0.99'] }}</td>
-                                            <td>{{ top['additional_weight'] }}</td>
-                                        </tr>
+                                        <template v-for="top in $page.props.flash.data?.top">
+                                            <tr v-if="$page.props.flash.data?.top?.length && top['weight_0.24']">
+                                                <td>{{ top['where_from'] }}</td>
+                                                <td>{{ top['where_to'] }}</td>
+                                                <td>{{ top['weight_0.24'] }}</td>
+                                                <td>{{ top['weight_0.49'] }}</td>
+                                                <td>{{ top['weight_0.99'] }}</td>
+                                                <td>{{ top['additional_weight'] }}</td>
+                                            </tr>
+                                        </template>
                                     </table>
                                 </div>
                             </div>

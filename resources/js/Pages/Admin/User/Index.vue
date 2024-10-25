@@ -60,7 +60,6 @@ const sendUserForm = () => {
 const userSearchQuery = ref(null)
 
 watch(userSearchQuery, (val) => {
-    console.log(val)
     router.get(route('admin.users.index', {name: val}), {}, {
         preserveScroll: true,
         preserveState: true,

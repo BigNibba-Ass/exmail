@@ -75,20 +75,23 @@ class DashboardController extends Controller
                             $localPrice = $exmailPrice * ((100 - $item['exmail_sale']) / 100);
                             $markup = (($localPrice - $exmailInitialCalculator->getPrice($item['weight'])) / $localPrice) * 100;
                         }
+                        if ($item['exmail_markup']) {
+                            $markup = $item['exmail_markup'];
+                        }
                     } catch (ServiceCalculatorException) {
 
                     }
                 }
 
                 $services['exmail'] = [
-                    'price' => $exmailPrice,
+                    'price' => (int) round($exmailPrice),
                     'terms' => $exmailCalculator->getArea()->terms,
                     'markup' => $markup,
                 ];
                 if ($sale = $item['exmail_sale']) {
-                    $services['exmail']['price'] = $exmailPrice * ((100 - $sale) / 100);
+                    $services['exmail']['price'] = (int) round($exmailPrice * ((100 - $sale) / 100));
                 } elseif ($item['exmail_markup'] && $markup && $exmailInitialCalculator) {
-                    $services['exmail']['price'] = ($exmailInitialCalculator->getPrice($item['weight']) / (1 - ($item['exmail_markup'] / 100)));
+                    $services['exmail']['price'] = (int) round(($exmailInitialCalculator->getPrice($item['weight']) / (1 - ($item['exmail_markup'] / 100))));
                 }
             } catch (ServiceCalculatorException $exception) {
                 return redirect()->back()->withErrors(['calculation' => $exception->getMessage()]);
@@ -105,7 +108,7 @@ class DashboardController extends Controller
                         $whereTo
                     );
                     $services[$service->company_id] = [
-                        'price' => $price = $comparingServiceCalculator->getPrice($item['weight'], $request->get('nds_included')),
+                        'price' => $price = (int) round($comparingServiceCalculator->getPrice($item['weight'], $request->get('nds_included'))),
                         'terms' => $comparingServiceCalculator->getArea()->terms,
                     ];
                     if ($sale = $extraService['sale']) {

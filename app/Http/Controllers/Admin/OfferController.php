@@ -3,13 +3,22 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\SearchRequest;
+use App\Models\Offer;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class OfferController extends Controller
 {
-    public function index()
+    public function index(SearchRequest $request)
     {
-        return inertia('Admin/Offer/Index');
+        return inertia('Admin/Offer/Index', [
+            'offers' => Offer::with('user')->when($request->name, function (Builder $query) use ($request) {
+                return $query->whereHas('user', function ($query) use ($request) {
+                    return $query->where('name', 'like', '%' . $request->name . '%');
+                });
+            })->get()
+        ]);
     }
 
     public function create()

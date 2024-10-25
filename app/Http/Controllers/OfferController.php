@@ -18,6 +18,6 @@ class OfferController extends Controller
 
     public function show(Offer $offer)
     {
-        return Inertia::render('Offer/Show', ['offer' => $offer]);
+        return \inertia('Offer/Show', ['offer' => $offer]);
     }
 }

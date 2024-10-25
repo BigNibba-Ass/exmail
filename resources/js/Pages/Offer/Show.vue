@@ -1,9 +1,7 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import {Head} from '@inertiajs/vue3';
-import {Link} from "@inertiajs/vue3";
 import OfferItem from "@/Pages/Offer/OfferItem.vue";
-import html2pdf from "html2pdf.js/src";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 

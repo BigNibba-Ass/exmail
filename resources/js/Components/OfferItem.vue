@@ -1,6 +1,5 @@
 <script setup>
 import offerList from '@/Assets/offer-list.png'
-import offerBg from '@/Assets/offer-bg.png'
 
 const props = defineProps({
     offer: Object,
@@ -94,9 +93,6 @@ const props = defineProps({
                         class="_ _2"> </span>Е
                     </div>
                     <div class="t m0 xc h9 y18 ff2 fs7 fc2 sc0 ls0 ws0">Уникальное предложение для Вас!</div>
-                    <div class="t m0 xc ha y19 ff5 fs8 fc2 sc0 ls0 ws0">Экспресс доставка документов <span
-                        class="_ _0"></span>из г. {{ props.user.city }}
-                    </div>
 
                     <div class="t m0 xc h4 y1b ff5 fs2 fc1 sc0 ls0 ws0">*Стоимость <span class="_ _3"></span>тари<span
                         class="_ _5"></span>фов <span class="_ _3"></span>у<span class="_ _5"></span>казана <span
@@ -108,7 +104,7 @@ const props = defineProps({
                                 <th style="text-align: center;padding: 20px">Направление</th>
                                 <th style="padding: 20px;border:1px solid black;">Вес</th>
                                 <th style="padding: 20px;border:1px solid black;">Стоимость</th>
-                                <th style="padding: 20px;border:1px solid black;">Сроки</th>
+                                <th v-if="props.offer.data.data.data[0].terms" style="padding: 20px;border:1px solid black;">Сроки</th>
                             </tr>
                             <tr style="border:1px solid black;" v-for="item in props.offer.data.data.data">
                                 <td style="padding: 20px;border:1px solid black;">{{ item.misc.where_from }} -
@@ -116,7 +112,7 @@ const props = defineProps({
                                 </td>
                                 <td style="padding: 20px;border:1px solid black;">{{ item.misc.weight }} кг</td>
                                 <td style="padding: 20px;border:1px solid black;">{{ item.exmail.price }} руб.</td>
-                                <td style="padding: 20px;border:1px solid black;">{{ item.exmail.terms }}</td>
+                                <td v-if="props.offer.data.data.data[0].terms" style="padding: 20px;border:1px solid black;">{{ item.exmail.terms }}</td>
                             </tr>
                         </table>
                     </div>
@@ -156,7 +152,7 @@ const props = defineProps({
                                     <th style="padding: 20px;border:1px solid black;">Вес до 0.25</th>
                                     <th style="padding: 20px;border:1px solid black;">Вес до 0.5</th>
                                     <th style="padding: 20px;border:1px solid black;">Вес до 1</th>
-                                    <th style="padding: 20px;border:1px solid black;">Каждый последующий</th>
+                                    <th style="padding: 20px;border:1px solid black;">Каждый последующий кг</th>
                                 </tr>
                                 <tr style="border:1px solid black;"
                                     v-for="item in props.offer.data.data.top.slice(0, 15)">
@@ -210,7 +206,7 @@ const props = defineProps({
                                     <th style="padding: 20px;border:1px solid black;">Вес до 0.25</th>
                                     <th style="padding: 20px;border:1px solid black;">Вес до 0.5</th>
                                     <th style="padding: 20px;border:1px solid black;">Вес до 1</th>
-                                    <th style="padding: 20px;border:1px solid black;">Каждый последующий</th>
+                                    <th style="padding: 20px;border:1px solid black;">Каждый последующий кг</th>
                                 </tr>
                                 <tr style="border:1px solid black;"
                                     v-for="item in props.offer.data.data.top.slice(15, 30)">
@@ -264,7 +260,7 @@ const props = defineProps({
                                     <th style="padding: 20px;border:1px solid black;">Вес до 0.25</th>
                                     <th style="padding: 20px;border:1px solid black;">Вес до 0.5</th>
                                     <th style="padding: 20px;border:1px solid black;">Вес до 1</th>
-                                    <th style="padding: 20px;border:1px solid black;">Каждый последующий</th>
+                                    <th style="padding: 20px;border:1px solid black;">Каждый последующий кг</th>
                                 </tr>
                                 <tr style="border:1px solid black;"
                                     v-for="item in props.offer.data.data.top.slice(30, 45)">
@@ -318,7 +314,7 @@ const props = defineProps({
                                     <th style="padding: 20px;border:1px solid black;">Вес до 0.25</th>
                                     <th style="padding: 20px;border:1px solid black;">Вес до 0.5</th>
                                     <th style="padding: 20px;border:1px solid black;">Вес до 1</th>
-                                    <th style="padding: 20px;border:1px solid black;">Каждый последующий</th>
+                                    <th style="padding: 20px;border:1px solid black;">Каждый последующий кг</th>
                                 </tr>
                                 <tr style="border:1px solid black;"
                                     v-for="item in props.offer.data.data.top.slice(45, 60)">
@@ -372,7 +368,7 @@ const props = defineProps({
                                     <th style="padding: 20px;border:1px solid black;">Вес до 0.25</th>
                                     <th style="padding: 20px;border:1px solid black;">Вес до 0.5</th>
                                     <th style="padding: 20px;border:1px solid black;">Вес до 1</th>
-                                    <th style="padding: 20px;border:1px solid black;">Каждый последующий</th>
+                                    <th style="padding: 20px;border:1px solid black;">Каждый последующий кг</th>
                                 </tr>
                                 <tr style="border:1px solid black;"
                                     v-for="item in props.offer.data.data.top.slice(60, 75)">
@@ -426,7 +422,7 @@ const props = defineProps({
                                     <th style="padding: 20px;border:1px solid black;">Вес до 0.25</th>
                                     <th style="padding: 20px;border:1px solid black;">Вес до 0.5</th>
                                     <th style="padding: 20px;border:1px solid black;">Вес до 1</th>
-                                    <th style="padding: 20px;border:1px solid black;">Каждый последующий</th>
+                                    <th style="padding: 20px;border:1px solid black;">Каждый последующий кг</th>
                                 </tr>
                                 <tr style="border:1px solid black;"
                                     v-for="item in props.offer.data.data.top.slice(75, 90)">
@@ -480,7 +476,7 @@ const props = defineProps({
                                     <th style="padding: 20px;border:1px solid black;">Вес до 0.25</th>
                                     <th style="padding: 20px;border:1px solid black;">Вес до 0.5</th>
                                     <th style="padding: 20px;border:1px solid black;">Вес до 1</th>
-                                    <th style="padding: 20px;border:1px solid black;">Каждый последующий</th>
+                                    <th style="padding: 20px;border:1px solid black;">Каждый последующий кг</th>
                                 </tr>
                                 <tr style="border:1px solid black;"
                                     v-for="item in props.offer.data.data.top.slice(90, 100)">

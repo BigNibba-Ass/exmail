@@ -508,10 +508,10 @@ const storeOffer = () => {
                                             <th>Вес до 0.25</th>
                                             <th>Вес до 0.5</th>
                                             <th>Вес до 1</th>
-                                            <th>Каждый последующий</th>
+                                            <th>Каждый последующий кг</th>
                                         </tr>
                                         <template v-for="top in $page.props.flash.data?.top">
-                                            <tr v-if="$page.props.flash.data?.top?.length && top['weight_0.24']">
+                                            <tr v-if="$page.props.flash.data?.top?.length">
                                                 <td>{{ top['where_from'] }}</td>
                                                 <td>{{ top['where_to'] }}</td>
                                                 <td>{{ top['weight_0.24'] }}</td>

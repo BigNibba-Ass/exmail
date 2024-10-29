@@ -86,8 +86,7 @@ class ServiceCalculator
         $priceQuery = $this->comparableService
             ->areaPrices()
             ->limit(1)
-            ->where(['area_number' => $this->area->area_number])
-            ->first();
+            ->where(['area_number' => $this->area->area_number]);
         if (!$priceQuery->exists()) {
             throw new ServiceCalculatorException("Не указан тариф (" . $this->getCompanyName() . ")");
         }

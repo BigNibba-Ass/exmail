@@ -1,16 +1,24 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import {Head} from '@inertiajs/vue3';
-import OfferItem from "@/Pages/Offer/OfferItem.vue";
+import OfferItem from "@/Components/OfferItem.vue";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import {ref} from "vue";
+import NProgress from 'nprogress'
 
 const props = defineProps({
     offer: Object,
     auth: Object,
 })
 
+const emit = defineEmits(['setPageLoadingParam'])
+
+const pageIsLoading = ref(false)
+
 const download = async () => {
+    pageIsLoading.value = true
+    NProgress.start()
     const canvases = []
     for (let elem of document.querySelectorAll("[id*='pf']")) {
         const canvas = await html2canvas(elem, {
@@ -27,13 +35,15 @@ const download = async () => {
         i++
     }
     pdf.save()
+    pageIsLoading.value = false
+    NProgress.done()
+    NProgress.remove()
 }
 </script>
 
 <template>
-    <Head :title="'Коммерческое предложение №' + props.offer.id"/>
-
-    <AuthenticatedLayout>
+    <AuthenticatedLayout v-model="pageIsLoading">
+        <Head :title="'Коммерческое предложение №' + props.offer.id"><title></title></Head>
         <form class="w-full">
             <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                 <div class="sm:col-span-6 text-center">

@@ -17,7 +17,7 @@ class OfferController extends Controller
                 return $query->whereHas('user', function ($query) use ($request) {
                     return $query->where('name', 'like', '%' . $request->name . '%');
                 });
-            })->get()
+            })->paginate(20)
         ]);
     }
 

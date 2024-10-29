@@ -15,7 +15,8 @@ const getBack = () => {
     window.history.back()
 }
 
-const pageIsLoading = ref(false)
+const pageIsLoading = defineModel({default: false})
+
 
 router.on('start', (e) => {
     if (['post', 'patch', 'put', 'delete'].includes(e.detail.visit.method)) {
@@ -109,7 +110,7 @@ router.on('finish', (e) => {
 
 .overlay{
     display: none;
-    position: absolute;
+    position: fixed;
     top: 0;
     left:0;
     height: 100vh;

@@ -7,15 +7,24 @@ import {router, usePage} from "@inertiajs/vue3";
 import {Link} from "@inertiajs/vue3";
 import {NoSymbolIcon, CheckIcon} from "@heroicons/vue/20/solid/index.js";
 import {generateRandomString} from "@/Traits.js";
+import Pagination from "@/Components/Pagination.vue";
 
 const props = defineProps({
-    offers: Array
+    offers: Object
 })
 
 const userSearchQuery = ref(null)
 
+const applyPage = (val) => {
+    const params = { page: val}
+    if(userSearchQuery.value) {
+        params.name = userSearchQuery.value
+    }
+    router.get(route('admin.offers.index', params))
+}
+
 watch(userSearchQuery, (val) => {
-    router.get(route('admin.offers.index', {name: val}), {}, {
+    router.get(route('admin.offers.index', {name: val, page: 1}), {}, {
         preserveScroll: true,
         preserveState: true,
     })
@@ -48,25 +57,25 @@ watch(userSearchQuery, (val) => {
                                 <th class="relative px-6 py-3">
                                     ФИО сотрудника
                                 </th>
-<!--                                <th class="relative px-6 py-3">-->
-<!--                                    Ссылка-->
-<!--                                </th>-->
+                                <!--                                <th class="relative px-6 py-3">-->
+                                <!--                                    Ссылка-->
+                                <!--                                </th>-->
                                 <th class="relative px-6 py-3">
                                     Дата создания
                                 </th>
                             </tr>
-                            <tr v-for="offer in props.offers">
+                            <tr v-for="offer in props.offers.data">
                                 <td class="relative px-6 py-3">
                                     {{ offer.id }}
                                 </td>
                                 <td class="relative px-6 py-3">
                                     {{ offer.user?.name }}
                                 </td>
-<!--                                <td class="relative px-6 py-3">-->
-<!--                                    <a style="color: blue" :href="route('offers.show', offer.id)">-->
-<!--                                        {{route('offers.show', offer.id)}}-->
-<!--                                    </a>-->
-<!--                                </td>-->
+                                <!--                                <td class="relative px-6 py-3">-->
+                                <!--                                    <a style="color: blue" :href="route('offers.show', offer.id)">-->
+                                <!--                                        {{route('offers.show', offer.id)}}-->
+                                <!--                                    </a>-->
+                                <!--                                </td>-->
                                 <td class="relative px-6 py-3">
                                     {{ offer.created_at_in_format }}
                                 </td>
@@ -75,7 +84,10 @@ watch(userSearchQuery, (val) => {
                             <tbody>
                             </tbody>
                         </table>
-
+                        <pagination
+                            @switch_page="applyPage"
+                            :current="props.offers.current_page"
+                            :max="props.offers.last_page"/>
                     </div>
                 </div>
             </form>

@@ -121,7 +121,7 @@ router.on('finish', (e) => {
     height: 100vh;
     width: 100vw;
     background-color: rgba(0,0,0,0);
-    z-index: 9999999999;
+    z-index: 51;
 }
 
 .overlay.is-active{

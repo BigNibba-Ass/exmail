@@ -16,8 +16,8 @@ const props = defineProps({
 const userSearchQuery = ref(null)
 
 const applyPage = (val) => {
-    const params = { page: val}
-    if(userSearchQuery.value) {
+    const params = {page: val}
+    if (userSearchQuery.value) {
         params.name = userSearchQuery.value
     }
     router.get(route('admin.offers.index', params))
@@ -50,16 +50,16 @@ watch(userSearchQuery, (val) => {
                         </div>
                         <table class="w-full rounded divide-y divide-gray-200 shadow rounded">
                             <thead class="bg-gray-50">
-                            <tr>
+                            <tr style="text-align: left">
                                 <th class="relative px-6 py-3">
                                     ID
                                 </th>
                                 <th class="relative px-6 py-3">
                                     ФИО сотрудника
                                 </th>
-                                <!--                                <th class="relative px-6 py-3">-->
-                                <!--                                    Ссылка-->
-                                <!--                                </th>-->
+                                <th class="relative px-6 py-3">
+                                    Ссылка
+                                </th>
                                 <th class="relative px-6 py-3">
                                     Дата создания
                                 </th>
@@ -71,11 +71,11 @@ watch(userSearchQuery, (val) => {
                                 <td class="relative px-6 py-3">
                                     {{ offer.user?.name }}
                                 </td>
-                                <!--                                <td class="relative px-6 py-3">-->
-                                <!--                                    <a style="color: blue" :href="route('offers.show', offer.id)">-->
-                                <!--                                        {{route('offers.show', offer.id)}}-->
-                                <!--                                    </a>-->
-                                <!--                                </td>-->
+                                <td class="relative px-6 py-3">
+                                    <a style="color: blue" :href="route('offers.show', offer.id)">
+                                        {{ route('offers.show', offer.id) }}
+                                    </a>
+                                </td>
                                 <td class="relative px-6 py-3">
                                     {{ offer.created_at_in_format }}
                                 </td>

@@ -50,6 +50,11 @@ router.on('finish', (e) => {
                                         Назад
                                     </a>
                                 </div>
+                                <div v-else class="m-5">
+                                    <Link href="/">
+                                        <ApplicationLogo class="fill-current text-gray-500 w-48" />
+                                    </Link>
+                                </div>
                                 <div class="ms-auto relative">
                                     <Dropdown align="right" width="48">
                                         <template #trigger>
@@ -116,7 +121,7 @@ router.on('finish', (e) => {
     height: 100vh;
     width: 100vw;
     background-color: rgba(0,0,0,0);
-    z-index: 2;
+    z-index: 9999999999;
 }
 
 .overlay.is-active{

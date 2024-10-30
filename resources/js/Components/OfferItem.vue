@@ -5,6 +5,8 @@ const props = defineProps({
     offer: Object,
     user: Object
 })
+
+console.log(props.offer)
 </script>
 
 <template>

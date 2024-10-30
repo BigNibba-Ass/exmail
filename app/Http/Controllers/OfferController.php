@@ -10,14 +10,16 @@ class OfferController extends Controller
 {
     public function store(OfferRequest $request)
     {
-        return redirect()->route('offers.show', Offer::create([
-            'user_id' => auth()->id(),
-            'data' => $request->get('data'),
-        ]));
+        return redirect()->back()->with('offer', [
+            'data' => Offer::create([
+                'user_id' => auth()->id(),
+                'data' => $request->get('data'),
+            ]),
+        ]);
     }
 
     public function show(Offer $offer)
     {
-        return \inertia('Offer/Show', ['offer' => $offer]);
+        return \inertia('OfferShow', ['offer' => $offer]);
     }
 }

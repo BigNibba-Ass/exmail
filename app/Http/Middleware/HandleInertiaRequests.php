@@ -35,7 +35,8 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'flash' => [
-                'data' => fn () => $request->session()->get('data')
+                'data' => fn () => $request->session()->get('data'),
+                'offer' => fn () => $request->session()->get('offer'),
             ],
             'csrf_token' => csrf_token(),
         ];

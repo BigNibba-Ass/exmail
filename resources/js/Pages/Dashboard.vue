@@ -5,7 +5,7 @@ import {computed, ref, watch} from "vue";
 import ComparisonParamField from "@/Components/Calculator/ComparisonParamField.vue";
 import CustomSelect from "@/Components/CustomSelect.vue";
 import Modal from "@/Components/Modal.vue";
-import {PlusCircleIcon, PencilSquareIcon} from "@heroicons/vue/24/solid/index.js";
+import {PlusCircleIcon, PencilSquareIcon, ArrowDownOnSquareIcon} from "@heroicons/vue/24/solid/index.js";
 import ComparisonHoldField from "@/Components/Calculator/ComparisonHoldField.vue";
 import DropdownLink from "@/Components/DropdownLink.vue";
 import Dropdown from "@/Components/Dropdown.vue";
@@ -15,10 +15,16 @@ import CalculationItem from "@/Components/Calculator/CalculationItem.vue";
 import {Switch} from "@headlessui/vue";
 import vSelect from 'vue-select'
 import 'vue-select/dist/vue-select.css';
-import {utils, write} from 'xlsx'
+import {CFB, read, utils, write} from 'xlsx'
 import {
     saveAs
 } from 'file-saver'
+import * as XLS from "xlsx";
+import {collect} from "collect.js";
+import OfferComponent from "@/Components/OfferComponent.vue";
+import NProgress from "nprogress";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const form = ref({
     exmail_service_id: null,
@@ -37,11 +43,13 @@ const props = defineProps({
     departure_points: Array,
     prices: Array,
     csrf_token: String,
+    auth: Object,
 })
 
 const modals = ref({
     comparisonParams: false,
     comparableHolds: false,
+    offer: false,
 })
 
 const selectedComparisonParams = ref([])
@@ -184,17 +192,83 @@ watch(() => form.value.top_exmail_markup, value => {
     }
 }, {deep: true})
 
+const currentOffer = ref(null)
+
 const storeOffer = () => {
     router.post(route('offers.store'), {
         data: page.props.flash,
+    }, {
+        onSuccess: () => {
+            currentOffer.value = page.props.flash.offer.data
+            console.log(currentOffer.value)
+            modals.value.offer = true
+        },
+        onError: (err) => {
+            console.log(err)
+        }
     })
+}
+const pageIsLoading = ref(false)
+
+const download = async () => {
+    pageIsLoading.value = true
+    NProgress.start()
+    const canvases = []
+    for (let elem of document.querySelectorAll("[id*='pf']")) {
+        const canvas = await html2canvas(elem, {
+            scale: 4,
+        })
+        canvases.push(canvas)
+    }
+    let pdf = new jsPDF('p', 'px', [1788, 2528]);
+    let i = 0
+    for (const elem of canvases) {
+        let imgData = elem.toDataURL("image/jpeg", 1.0);
+        pdf.addPage()
+        pdf.addImage(imgData, 'JPEG', 0, 0, 1788, 2528, "alias" + i)
+        i++
+    }
+    pdf.save()
+    pageIsLoading.value = false
+    NProgress.done()
+    NProgress.remove()
+}
+
+
+const uploadFile = (event) => {
+    let reader = new FileReader();
+    reader.onload = function () {
+        let arrayBuffer = this.result,
+            array = new Uint8Array(arrayBuffer),
+            binaryString = String.fromCharCode.apply(null, array);
+        let workbook = read(binaryString, {
+            type: "binary"
+        });
+        let first_sheet_name = workbook.SheetNames[0];
+        let worksheet = workbook.Sheets[first_sheet_name];
+        for (const elem of utils.sheet_to_json(worksheet, {
+            raw: true
+        })) {
+            const whereFrom = collect(props.departure_points).where('text', '==', elem['Откуда']).first().value
+            const whereTo = collect(props.departure_points).where('text', '==', elem['Куда']).first().value
+            form.value.calculation_items.push({
+                exmail_sale: null,
+                exmail_markup: null,
+                terms: 'Указаны',
+                where_from: whereFrom,
+                where_to: whereTo,
+                weight: String(elem['Вес']).replace(' кг', ''),
+            })
+        }
+    }
+    reader.readAsArrayBuffer(event.target.files[0])
 }
 </script>
 
 <template>
     <Head title="Главная"/>
 
-    <AuthenticatedLayout>
+    <AuthenticatedLayout v-model="pageIsLoading">
         <Modal :show="modals.comparisonParams" @close="modals.comparisonParams = false">
             <div class="p-6">
                 <h2 class="text-lg text-center font-medium text-gray-900">
@@ -247,6 +321,11 @@ const storeOffer = () => {
 
             </div>
         </Modal>
+        <Modal :show="modals.offer" @close="modals.offer = false">
+            <div class="p-6">
+                <offer-component :user="props.auth.user" :offer="currentOffer" @download="download"/>
+            </div>
+        </Modal>
         <div class="w-full">
             <form @submit.prevent="calculate">
                 <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
@@ -291,6 +370,15 @@ const storeOffer = () => {
                             <button type="button" @click.prevent="modals.comparisonParams = true">
                                 <pencil-square-icon class="w-5 h-5 text-indigo-600"/>
                             </button>
+                            <button type="button" @click.prevent="$refs.uploadInput.click()">
+                                <arrow-down-on-square-icon class="w-5 h-5 text-indigo-600"/>
+                            </button>
+                            <input
+                                hidden
+                                ref="uploadInput"
+                                type="file"
+                                @change="uploadFile($event)"
+                            />
                         </div>
                     </div>
 

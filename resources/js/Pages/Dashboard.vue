@@ -224,8 +224,10 @@ const download = async () => {
     let i = 0
     for (const elem of canvases) {
         let imgData = elem.toDataURL("image/jpeg", 1.0);
-        pdf.addPage()
         pdf.addImage(imgData, 'JPEG', 0, 0, 1788, 2528, "alias" + i)
+        if(i < canvases.length - 1) {
+            pdf.addPage()
+        }
         i++
     }
     pdf.save()

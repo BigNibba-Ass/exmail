@@ -32,6 +32,7 @@ Route::middleware(['auth'])->group(function () {
         ]);
         Route::post('/users/handle_block_attempt/{user}', [UserController::class, 'handleBlockAttempt'])->name('users.handle-block-attempt');
         Route::post('/users/handle_admin_attempt/{user}', [UserController::class, 'handleAdminAttempt'])->name('users.handle-admin-attempt');
+        Route::post('/upload', [InformationsController::class, 'uploadData'])->name('upload-data');
     });
 
 });

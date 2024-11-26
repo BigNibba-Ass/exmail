@@ -50,7 +50,7 @@ class InformationsController extends Controller
                 $whereFrom = ImportService::formatDeparturePoint($worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '2')));
                 $whereTo = ImportService::formatDeparturePoint($worksheet->getCell(new CellAddress('$' . 'A' . '$' . $row)));
                 if (!$whereTo || !$whereFrom) continue;
-                Area::create([
+                Area::updateOrCreate([
                     'area_number' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . $row))->getValue(),
                     'where_from' => DeparturePoint::firstOrCreate(['name' => $whereFrom])->id,
                     'where_to' => DeparturePoint::firstOrCreate(['name' => $whereTo])->id,
@@ -71,7 +71,7 @@ class InformationsController extends Controller
             for ($col = 2; $col <= $highestColumnIndex; $col++) {
                 $weightArray = explode(';', $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '2')));
                 try {
-                    AreaPrice::create([
+                    AreaPrice::updateOrCreate([
                         'service_id' => $serviceId,
                         'area_number' => $area,
                         'weight_min' => $weightArray[0],

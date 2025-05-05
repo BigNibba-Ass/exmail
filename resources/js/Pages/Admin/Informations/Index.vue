@@ -19,6 +19,13 @@ const submit = () => {
     router.post(route('admin.upload-data'), {
         service_id: selectedServiceId.value,
         file: file.value,
+    }, {
+        onSuccess: () => {
+            alert('Загрузка завершена')
+        },
+        onError: (e) => {
+            alert('Не удалось загрузить файл, проверьте правильность совместимость excel файла с услугой')
+        },
     })
 }
 </script>

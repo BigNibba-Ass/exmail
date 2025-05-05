@@ -253,13 +253,14 @@ const uploadFile = (event) => {
         })) {
             const whereFrom = collect(props.departure_points).where('text', '==', elem['Откуда']).first().value
             const whereTo = collect(props.departure_points).where('text', '==', elem['Куда']).first().value
+            console.log(whereFrom, elem)
             form.value.calculation_items.push({
                 exmail_sale: null,
                 exmail_markup: null,
                 terms: 'Указаны',
                 where_from: whereFrom,
                 where_to: whereTo,
-                weight: String(elem['Вес']).replace(' кг', ''),
+                weight: parseFloat(String(elem['Вес']).replace(' кг', '').replace(',', '.')),
             })
         }
     }

@@ -6,6 +6,7 @@ import {
     CircleStackIcon,
     DeviceTabletIcon,
     UserCircleIcon,
+    BuildingLibraryIcon
 } from "@heroicons/vue/20/solid/index.js";
 import {Link} from "@inertiajs/vue3";
 
@@ -18,6 +19,7 @@ const pages = [
     {name: 'Экран 1', icon: DeviceTabletIcon, route: 'admin.main-screen'},
 
     {name: 'Инф. база', icon: CircleStackIcon, route: 'admin.informations.index'},
+    {name: 'Города', icon: BuildingLibraryIcon, route: 'admin.cities.index'},
 
     {name: 'База КП', icon: BriefcaseIcon, route: 'admin.offers.index'},
 ]

@@ -71,16 +71,18 @@ class InformationsController extends Controller
             for ($col = 2; $col <= $highestColumnIndex; $col++) {
                 $weightArray = explode(';', $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . '2')));
                 try {
-                    AreaPrice::updateOrCreate([
+                    $areaPrice = AreaPrice::updateOrCreate([
                         'service_id' => $serviceId,
                         'area_number' => $area,
                         'weight_min' => $weightArray[0],
                         'weight_max' => $weightArray[1],
+                    ], [
                         'price' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($col) . '$' . $row))->getValueString(),
                         'price_per_extra' => $worksheet->getCell(new CellAddress('$' . Coordinate::stringFromColumnIndex($highestColumnIndex) . '$' . $row))->getValueString(),
                         'extra_definition' => 1,
                     ]);
-                } catch (\Exception) {
+                } catch (\Exception $exception) {
+//                    dd($exception->getMessage());
                 }
 
             }

@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\MainScreenController;
 use App\Http\Controllers\Admin\OfferController as AdminOfferController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\CityController;
 use App\Http\Controllers\CompanyController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OfferController;
@@ -29,6 +30,7 @@ Route::middleware(['auth'])->group(function () {
             'companies' => CompanyController::class,
             'informations' => InformationsController::class,
             'offers' => AdminOfferController::class,
+            'cities' => CityController::class,
         ]);
         Route::post('/users/handle_block_attempt/{user}', [UserController::class, 'handleBlockAttempt'])->name('users.handle-block-attempt');
         Route::post('/users/handle_admin_attempt/{user}', [UserController::class, 'handleAdminAttempt'])->name('users.handle-admin-attempt');

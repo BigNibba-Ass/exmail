@@ -98,6 +98,16 @@ const sendUserForm = () => {
                         </div>
                     </div>
                     <div>
+                        <label for="name" class="block text-sm font-medium text-gray-700">
+                            Город </label>
+                        <div class="mt-1">
+                            <input type="text" id="name"
+
+                                   v-model="userForm.city"
+                                   class="flex-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full min-w-0 rounded-md sm:text-sm border-gray-300"/>
+                        </div>
+                    </div>
+                    <div>
                         <label for="email" class="block text-sm font-medium text-gray-700">
                             E-Mail </label>
                         <div class="mt-1">

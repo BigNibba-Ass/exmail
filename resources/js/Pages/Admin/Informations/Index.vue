@@ -1,7 +1,7 @@
 <script setup>
 import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout.vue";
 import AdminLayout from "@/Layouts/AdminLayout.vue";
-import {ref} from "vue";
+import {computed, ref} from "vue";
 import {UserIcon, EyeIcon, EyeSlashIcon} from "@heroicons/vue/20/solid/index.js";
 
 import {PencilIcon, ArrowPathIcon} from "@heroicons/vue/20/solid/index.js";
@@ -28,6 +28,15 @@ const submit = () => {
         },
     })
 }
+
+const downloadLink = computed({
+    get() {
+        return route('admin.download-data', {
+            service_id: selectedServiceId.value,
+        })
+    }, set() {
+    }
+})
 </script>
 
 <template>
@@ -42,7 +51,7 @@ const submit = () => {
                 <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                     <div class="sm:col-span-6 rounded grid grid-cols-1 gap-y-6 gap-x-4">
                         <h2 class="text-lg font-medium text-gray-900">
-                            Загрузить файл (.xlsx) к услуге
+                            Загрузить/выгрузить файл к услуге (.xlsx)
                         </h2>
                     </div>
                     <div class="rounded sm:col-span-6 grid grid-cols-1 gap-y-6 gap-x-4">
@@ -71,8 +80,15 @@ const submit = () => {
                                 type="submit"
                                 class="w-full sm:col-span-6 justify-center inline-flex items-center p-3 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700">
                                 <user-icon class="w-5 me-auto text-indigo-white"/>
-                                <span class="me-auto">Создать</span>
+                                <span class="me-auto">Загрузить</span>
                             </button>
+                            <a :href="downloadLink"
+                               class="w-full sm:col-span-6 justify-center inline-flex items-center p-3 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700">
+                                <user-icon class="w-5 me-auto text-indigo-white"/>
+                                <span class="me-auto">
+                                    Выгрузить
+                                </span>
+                            </a>
                         </template>
                     </div>
                 </div>

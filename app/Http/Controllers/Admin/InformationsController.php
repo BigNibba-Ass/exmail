@@ -8,11 +8,15 @@ use App\Models\Area;
 use App\Models\AreaPrice;
 use App\Models\Company;
 use App\Models\DeparturePoint;
+use App\Models\Service;
 use App\Services\ImportService;
 use Illuminate\Http\Request;
 use PhpOffice\PhpSpreadsheet\Cell\CellAddress;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Psy\Util\Str;
 
 class InformationsController extends Controller
 {
@@ -91,5 +95,39 @@ class InformationsController extends Controller
         \Storage::delete($file);
 
         return redirect()->back();
+    }
+
+    public function downloadData(Request $request)
+    {
+        $prices = AreaPrice::where(['service_id' => $request->get('service_id')])->get();
+        $spreadsheet = new Spreadsheet();
+        $activeWorksheet = $spreadsheet->getActiveSheet();
+        $activeWorksheet->setCellValue('A1', 'Зоны');
+        $activeWorksheet->mergeCells('A1:A2');
+
+        $iVertical = 3;
+        $areas = $prices->groupBy('area_number')->map(function ($row, $key) {
+            $row->key = intval($key);
+            return $row;
+        })->sortBy('key');
+        foreach ($areas as $key => $area) {
+            $activeWorksheet->setCellValue('A' . $iVertical, $key);
+
+            $iHorizontal = 2;
+            foreach ($area as $item) {
+                $activeWorksheet->setCellValue([$iHorizontal, $iVertical], $item['price']);
+                $activeWorksheet->setCellValue([$iHorizontal, 2], $item['weight_min'] . ';' . $item['weight_max']);
+                $iHorizontal++;
+            }
+            $activeWorksheet->setCellValue([$iHorizontal, $iVertical], $area[0]['price_per_extra']);
+            $activeWorksheet->setCellValue([$iHorizontal, 2], 'послед.');
+            $iVertical++;
+        }
+
+        $writer = new Xlsx($spreadsheet);
+        $file = storage_path('app/' . \Illuminate\Support\Str::random(32));
+        $writer->save($file);
+        $service = Service::find($request->get('service_id'));
+        return response()->download($file, $service->company->name . '-' . $service->name . '-' . now() . '.xlsx');
     }
 }

@@ -124,6 +124,30 @@ class InformationsController extends Controller
             $iVertical++;
         }
 
+        $spreadsheet->createSheet();
+        $spreadsheet->setActiveSheetIndex(1);
+        $activeWorksheet = $spreadsheet->getActiveSheet();
+        $activeWorksheet->setCellValue('B1', 'Откуда');
+        $activeWorksheet->setCellValue('A2', 'Куда');
+
+
+        $areasTotal = Area::with('departurePointTo', 'departurePointFrom')->where(['service_id' => $request->get('service_id')])->get();
+        $areasTo = Area::with('departurePointTo')->where(['service_id' => $request->get('service_id')])->get()->unique(['where_to']);
+        $areasFrom = Area::with('departurePointFrom')->where(['service_id' => $request->get('service_id')])->get()->unique(['where_from']);
+        $iVertical = 3;
+        foreach ($areasTo as $areaTo) {
+            $activeWorksheet->setCellValue('A' . $iVertical, $areaTo?->departurePointTo?->name ?? '-');
+
+            $iHorizontal = 2;
+            foreach ($areasFrom as $areaFrom) {
+                $activeWorksheet->setCellValue([$iHorizontal, 2], $areaFrom?->departurePointFrom?->name ?? '-');
+                $areaMatched = $areasTotal->where('where_to', $areaTo->where_to)->where('where_from', $areaFrom->where_from)->first();
+                $activeWorksheet->setCellValue([$iHorizontal, $iVertical], $areaMatched->area_number ?? '-');
+                $iHorizontal++;
+            }
+            $iVertical++;
+        }
+
         $writer = new Xlsx($spreadsheet);
         $file = storage_path('app/' . \Illuminate\Support\Str::random(32));
         $writer->save($file);
